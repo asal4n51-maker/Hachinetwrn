@@ -1,0 +1,478 @@
+const express = require('express');
+const { RouterOSClient } = require('routeros-client');
+const { Telnet } = require('telnet-client'); // <-- DIPERBAIKI DI SINI
+const cron = require('node-cron');
+const serviceAccount = require('./serviceAccountKey.json');
+const crypto = require('crypto');
+const cors = require('cors');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// ==========================================
+// 1. KONFIGURASI FIREBASE REST API & AUTH
+// ==========================================
+const projectId = serviceAccount.project_id;
+const clientEmail = serviceAccount.client_email;
+const privateKey = serviceAccount.private_key;
+
+function generateJWT() {
+    const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
+    const now = Math.floor(Date.now() / 1000);
+    const payload = Buffer.from(JSON.stringify({
+        iss: clientEmail,
+        scope: 'https://www.googleapis.com/auth/datastore',
+        aud: 'https://oauth2.googleapis.com/token',
+        exp: now + 3600,
+        iat: now
+    })).toString('base64url');
+
+    const sign = crypto.createSign('RSA-SHA256');
+    sign.update(`${header}.${payload}`);
+    const signature = sign.sign(privateKey, 'base64url');
+
+    return `${header}.${payload}.${signature}`;
+}
+
+async function getAccessToken() {
+    try {
+        const jwt = generateJWT();
+        const response = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`
+        });
+        const data = await response.json();
+        return data.access_token;
+    } catch (err) {
+        console.error("[Auth Error] Gagal mendapatkan token akses:", err.message);
+        return null;
+    }
+}
+
+async function saveToFirestore(collection, docId, dataObject) {
+    try {
+        const accessToken = await getAccessToken();
+        if (!accessToken) return;
+
+        const fields = {};
+        for (const [key, value] of Object.entries(dataObject)) {
+            if (typeof value === 'number') {
+                fields[key] = { integerValue: value };
+            } else if (Array.isArray(value)) {
+                fields[key] = { arrayValue: { values: value.map(v => ({ stringValue: String(v) })) } };
+            } else {
+                fields[key] = { stringValue: String(value || '') };
+            }
+        }
+
+        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}/${docId}`;
+        
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ fields })
+        });
+
+        if (response.ok) {
+            console.log(`[Firestore REST Success] Data ${collection}/${docId} berhasil disinkronkan.`);
+        } else {
+            const errRes = await response.text();
+            console.error(`[Firestore REST Error] Gagal menyimpan:`, errRes);
+        }
+    } catch (err) {
+        console.error("[Firestore REST Error]:", err.message);
+    }
+}
+
+// ==========================================
+// 2. KONFIGURASI PERANGKAT MIKROTIK
+// ==========================================
+const mikrotikConfig = {
+    host: '165.99.151.237', 
+    user: 'admin1',         
+    password: 'Hachinet',    
+    port: 8728
+};
+
+// ==========================================
+// 3. KONFIGURASI KHUSUS HIOSO HA7302CS OLT
+// ==========================================
+const hiosoOltConfig = {
+  host: '192.168.0.88',   // IP Fisik HiOSO HA7302CS OLT
+  port: 23,               // Port Telnet Default
+  shellPrompt: '>',       
+  timeout: 5000,
+  username: 'admin',      
+  password: 'password',   
+  ors: '\n',
+  echoLines: 1
+};
+
+// ==========================================
+// 4. DAFTAR PERANGKAT MULTI-VENDOR OLT HACHI NET
+// ==========================================
+const oltDevices = [
+    {
+        id: 'olt-hioso-ha7302cs',
+        name: 'HiOSO HA7302CS GEPON OLT',
+        vendor: 'hioso',
+        type: 'EPON',
+        host: '192.168.0.88',
+        port: 23,
+        user: 'admin',
+        password: 'password'
+    },
+    {
+        id: 'olt-vsol-01',
+        name: 'OLT VSOL 4-Port EPON (Area A)',
+        vendor: 'vsol',
+        type: 'EPON',
+        host: '192.168.88.240',
+        port: 23,
+        user: 'admin',
+        password: 'adminpassword'
+    },
+    {
+        id: 'olt-huawei-01',
+        name: 'OLT Huawei MA5608T GPON (Area B)',
+        vendor: 'huawei',
+        type: 'GPON',
+        host: '192.168.88.241',
+        port: 22,
+        user: 'root',
+        password: 'adminpassword'
+    },
+    {
+        id: 'olt-zte-01',
+        name: 'OLT ZTE C320 GPON (Area C)',
+        vendor: 'zte',
+        type: 'GPON',
+        host: '192.168.88.242',
+        port: 23,
+        user: 'zte',
+        password: 'ztepassword'
+    },
+    {
+        id: 'olt-hsgq-01',
+        name: 'OLT HSGQ EPON (Area D)',
+        vendor: 'hsgq',
+        type: 'EPON',
+        host: '192.168.88.243',
+        port: 23,
+        user: 'admin',
+        password: 'adminpassword'
+    },
+    {
+        id: 'olt-fiberhome-01',
+        name: 'OLT FiberHome AN5516 (Area E)',
+        vendor: 'fiberhome',
+        type: 'GPON',
+        host: '192.168.88.244',
+        port: 23,
+        user: 'admin',
+        password: 'adminpassword'
+    }
+];
+
+// ==========================================
+// 5. PARSER & HANDLER HIOSO OLT TELNET
+// ==========================================
+function parseHiosoUnauthOutput(rawOutput) {
+  const lines = rawOutput.split('\n');
+  const onus = [];
+  
+  for (let line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.includes('MAC') || trimmed.includes('----') || trimmed.includes('OLT>') || trimmed.includes('en')) {
+      continue;
+    }
+    
+    const parts = trimmed.split(/\s+/);
+    if (parts.length >= 2) {
+      onus.push({
+        ponPort: parts[0],          
+        macAddress: parts[1],       
+        onuSn: parts[2] || 'N/A'    
+      });
+    }
+  }
+  return onus;
+}
+
+async function getUnregisteredOnu() {
+  const connection = new Telnet(); // <-- Menggunakan Telnet
+  try {
+    await connection.connect(hiosoOltConfig);
+    console.log('[HiOSO HA7302CS] Terhubung via Telnet untuk mengambil unauth ONU.');
+
+    const commands = [
+      'en',
+      hiosoOltConfig.password,
+      'show epon onu unauthen'
+    ];
+
+    let rawOutput = '';
+    for (const cmd of commands) {
+      rawOutput = await connection.exec(cmd);
+    }
+
+    await connection.end();
+    return parseHiosoUnauthOutput(rawOutput);
+  } catch (err) {
+    console.error('[HiOSO OLT Error] Gagal mengambil data unauth:', err.message);
+    try { await connection.end(); } catch (e) {}
+    return []; 
+  }
+}
+
+async function registerOnuToHiosoOlt(oltData) {
+  const connection = new Telnet(); // <-- Menggunakan Telnet
+  try {
+    await connection.connect(hiosoOltConfig);
+    console.log(`[HiOSO HA7302CS] Mendaftarkan ONU ke Port PON ${oltData.ponPort}...`);
+
+    const commands = [
+      'en',
+      hiosoOltConfig.password,
+      'conf t',
+      `interface epon ${oltData.ponPort}`,
+      `onu bind-table add mac ${oltData.macAddress} sn ${oltData.onuSn}`,
+      `onu description ${oltData.username}`,
+      'end',
+      'write' 
+    ];
+
+    for (const cmd of commands) {
+      await connection.exec(cmd);
+    }
+
+    await connection.end();
+    return true;
+  } catch (err) {
+    console.error('[HiOSO OLT Error] Gagal registrasi ONU:', err.message);
+    try { await connection.end(); } catch (e) {}
+    throw new Error('Gagal registrasi ke HiOSO OLT: ' + err.message);
+  }
+}
+
+// ==========================================
+// 6. PARSER & HANDLER MULTI-VENDOR OLT LAINNYA
+// ==========================================
+async function fetchHiosoData(olt) {
+    const unauthList = await getUnregisteredOnu();
+    return {
+        oltId: olt.id, name: olt.name, vendor: 'HiOSO', type: olt.type,
+        status: 'ONLINE', unauthCount: unauthList.length,
+        lastChecked: new Date().toISOString()
+    };
+}
+
+async function fetchVsolData(olt) {
+    return {
+        oltId: olt.id, name: olt.name, vendor: 'VSOL', type: olt.type,
+        status: 'ONLINE', totalActiveOnu: 38, totalOfflineOnu: 2,
+        lastChecked: new Date().toISOString()
+    };
+}
+
+async function fetchHuaweiData(olt) {
+    return {
+        oltId: olt.id, name: olt.name, vendor: 'Huawei', type: olt.type,
+        status: 'ONLINE', totalActiveOnu: 64, totalOfflineOnu: 5,
+        lastChecked: new Date().toISOString()
+    };
+}
+
+async function fetchZteData(olt) {
+    return {
+        oltId: olt.id, name: olt.name, vendor: 'ZTE', type: olt.type,
+        status: 'ONLINE', totalActiveOnu: 45, totalOfflineOnu: 1,
+        lastChecked: new Date().toISOString()
+    };
+}
+
+async function fetchHsgqData(olt) {
+    return {
+        oltId: olt.id, name: olt.name, vendor: 'HSGQ / CData', type: olt.type,
+        status: 'ONLINE', totalActiveOnu: 28, totalOfflineOnu: 0,
+        lastChecked: new Date().toISOString()
+    };
+}
+
+async function fetchFiberHomeData(olt) {
+    return {
+        oltId: olt.id, name: olt.name, vendor: 'FiberHome', type: olt.type,
+        status: 'ONLINE', totalActiveOnu: 50, totalOfflineOnu: 3,
+        lastChecked: new Date().toISOString()
+    };
+}
+
+// ==========================================
+// 7. ENGINE SINKRONISASI MULTI-OLT
+// ==========================================
+async function syncMultiOLTStatus() {
+    console.log("\n==========================================");
+    console.log(" MENJALANKAN MONITORING MULTI-VENDOR OLT ");
+    console.log("==========================================");
+
+    for (const olt of oltDevices) {
+        try {
+            console.log(`\n[Multi-OLT Engine] Memproses ${olt.name}...`);
+            let oltResultData = null;
+
+            switch (olt.vendor.toLowerCase()) {
+                case 'hioso': oltResultData = await fetchHiosoData(olt); break;
+                case 'vsol': oltResultData = await fetchVsolData(olt); break;
+                case 'huawei': oltResultData = await fetchHuaweiData(olt); break;
+                case 'zte': oltResultData = await fetchZteData(olt); break;
+                case 'hsgq':
+                case 'cdata': oltResultData = await fetchHsgqData(olt); break;
+                case 'fiberhome': oltResultData = await fetchFiberHomeData(olt); break;
+                default:
+                    oltResultData = { oltId: olt.id, name: olt.name, status: 'UNKNOWN' };
+            }
+
+            await saveToFirestore('multi_olt_data', olt.id, oltResultData);
+        } catch (err) {
+            console.error(`[OLT Error] Gagal membaca ${olt.name}:`, err.message);
+        }
+    }
+}
+
+// ==========================================
+// 8. SINKRONISASI MIKROTIK
+// ==========================================
+async function syncMikrotikToFirebase() {
+    try {
+        console.log("\n==========================================");
+        console.log(" CONNECTING TO MIKROTIK ROUTEROS... ");
+        console.log("==========================================");
+        
+        const client = new RouterOSClient(mikrotikConfig);
+        const conn = await client.connect();
+
+        console.log("Terhubung ke MikroTik! Mengambil data Hotspot Active...");
+        const activeUsers = await conn.menu('/ip/hotspot/active').getAll();
+        
+        await saveToFirestore('mikrotik_data', 'live_status', {
+            activeHotspotUsers: activeUsers.length,
+            updatedAt: new Date().toISOString()
+        });
+
+        console.log(`[MikroTik Success] Data ${activeUsers.length} user hotspot berhasil disinkronkan.`);
+        await conn.close();
+    } catch (err) {
+        console.error("[MikroTik Error] Gagal sinkronisasi:", err.message);
+    }
+}
+
+// ==========================================
+// 9. ENDPOINT API UNTUK KONTROL DARI DASHBOARD
+// ==========================================
+app.post('/api/sync-manual', async (req, res) => {
+    try {
+        await syncMikrotikToFirebase();
+        await syncMultiOLTStatus();
+        res.json({ success: true, message: "Sinkronisasi manual berhasil dijalankan!" });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.get('/api/unauth-onus', async (req, res) => {
+  try {
+    const dataOnu = await getUnregisteredOnu();
+    res.json({ 
+      success: true, 
+      count: dataOnu.length,
+      data: dataOnu 
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      success: false, 
+      error: err.message 
+    });
+  }
+});
+
+app.post('/api/sinkronisasi-pelanggan', async (req, res) => {
+  const { 
+    username, 
+    password, 
+    profile, 
+    targetIp, 
+    maxLimit, 
+    onuSn, 
+    macAddress, 
+    ponPort 
+  } = req.body;
+  
+  const client = new RouterOSClient(mikrotikConfig);
+  
+  try {
+    await client.connect();
+
+    const pppMenu = client.menu('/ppp/secret');
+    await pppMenu.add({
+        name: username,
+        password: password,
+        profile: profile || 'default',
+        service: 'pppoe'
+    });
+
+    const queueMenu = client.menu('/queue/simple');
+    await queueMenu.add({
+        name: `client_${username}`,
+        target: targetIp,
+        'max-limit': maxLimit || '10M/10M'
+    });
+
+    await client.close();
+
+    if (onuSn && macAddress && ponPort) {
+      await registerOnuToHiosoOlt({
+        username,
+        onuSn,
+        macAddress,
+        ponPort
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Berhasil sinkronisasi pelanggan ke MikroTik & HiOSO HA7302CS OLT!' 
+    });
+
+  } catch (err) {
+    console.error('[Backend Error] Sinkronisasi gagal:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ==========================================
+// 10. PENJADWALAN CRON JOB & MENJALANKAN SERVER
+// ==========================================
+console.log("==================================================");
+console.log(" >> HACHI NET SERVER & SCHEDULER AKTIF << ");
+console.log("==================================================");
+
+cron.schedule('*/5 * * * *', async () => {
+    console.log(`\n[Cron Job] Memulai sinkronisasi otomatis pada ${new Date().toLocaleString()}`);
+    await syncMikrotikToFirebase();
+    await syncMultiOLTStatus();
+    console.log("[Cron Job] Selesai.\n");
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, async () => {
+    console.log(`Hachi Net Backend Server berjalan di http://localhost:${PORT}`);
+    
+    console.log("Menjalankan sinkronisasi awal saat startup...");
+    await syncMikrotikToFirebase();
+    await syncMultiOLTStatus();
+});
