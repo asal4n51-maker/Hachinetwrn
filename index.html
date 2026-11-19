@@ -9,125 +9,126 @@
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
-body{font-family:system-ui,sans-serif}
+body{font-family:system-ui,sans-serif;margin:0}
 .no-scrollbar::-webkit-scrollbar{display:none}
 input,select,textarea{outline:none}
-/* CAHAYA EMAS LEB AH */
-.glow-bee{
-  position:relative;
-  width:130px;height:130px;margin:0 auto;
-  background:radial-gradient(circle, rgba(255,215,0,0.9) 0%, rgba(255,180,0,0.5) 35%, rgba(255,180,0,0) 70%);
-  border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 0 60px 20px rgba(255,215,0,0.6), 0 0 120px 40px rgba(255,180,0,0.3);
-  animation:glowPulse 2.5s ease-in-out infinite;
-}
-@keyframes glowPulse{0%,100%{box-shadow:0 0 50px 15px rgba(255,215,0,0.5),0 0 100px 30px rgba(255,180,0,0.25)}50%{box-shadow:0 0 80px 30px rgba(255,215,0,0.85),0 0 140px 50px rgba(255,180,0,0.45)}}
-/* NOT MUSIK MELAYANG */
-.float-note{position:absolute;font-size:22px;opacity:0.9;animation:floatUp 4s ease-in-out infinite}
-@keyframes floatUp{0%{transform:translateY(20px) rotate(-10deg);opacity:0}20%{opacity:1}100%{transform:translateY(-90px) rotate(15deg);opacity:0}}
-.login-card{
-  background:linear-gradient(180deg,#2a2a2a 0%,#1a1a1a 100%);
-  border:1px solid rgba(255,215,0,0.25);
-  box-shadow:0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(255,215,0,0.15);
-}
+.glow-bee{width:120px;height:120px;margin:0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:0.3s}
+.glow-bee:active{transform:scale(0.92)}
+.glow-dark{background:radial-gradient(circle, rgba(255,215,0,0.9) 0%, rgba(255,180,0,0.4) 40%, transparent 70%);box-shadow:0 0 50px 15px rgba(255,215,0,0.5)}
+.glow-terang{background:radial-gradient(circle, #fff 0%, #FFD700 40%, #FFB800 70%);box-shadow:0 0 100px 40px rgba(255,255,255,0.9),0 0 150px 60px rgba(255,215,0,0.9);transform:scale(1.1)}
+.float-note{position:absolute;font-size:22px;animation:naik 3.5s ease-in-out infinite;pointer-events:none}
+@keyframes naik{0%{transform:translateY(20px);opacity:0}20%{opacity:1}100%{transform:translateY(-80px);opacity:0}}
+.card-dark{background:#1a1a1a;border:1px solid rgba(255,215,0,0.3)}
+.card-terang{background:#FFF8DC;border:2px solid #FFD700;box-shadow:0 0 60px rgba(255,215,0,0.6)}
 .input-dark{background:#111;border:1px solid #333;color:white}
-.input-dark::placeholder{color:#777}
-.input-dark:focus{border-color:#FFD700}
+.input-terang{background:white;border:1px solid #FFD700;color:black}
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
 const {useState} = React;
-const initialClients=[
-{id:1,nama:"Dole",nik:"3201123456780001",paket:"30 Mbps",harga:125000,alamat:"Kp. Warnasari RT 01",status:"Aktif",odp:"ODP-WRN-01",sn:"HWTC11223344",ip:"192.168.1.101",rx:"-20.1 dBm",bayar:"Belum Lunas",hp:"628123456789",jatuhTempo:"28 Nov 2026",teknisi:"Andi"},
-{id:2,nama:"Sulaeman",nik:"3201123456780002",paket:"20 Mbps",harga:100000,alamat:"Kp. Warnasari RT 02",status:"Aktif",odp:"ODP-WRN-01",sn:"VSOL99887766",ip:"192.168.1.102",rx:"-18.8 dBm",bayar:"Lunas",hp:"628123456790",jatuhTempo:"25 Nov 2026",teknisi:"Budi"},
-{id:3,nama:"Rudi Hartono",nik:"3201123456780003",paket:"50 Mbps",harga:180000,alamat:"Kp. Warnasari RT 03",status:"Aktif",odp:"ODP-WRN-02",sn:"HWTC55667788",ip:"192.168.1.103",rx:"-22.1 dBm",bayar:"Lunas",hp:"628123456791",jatuhTempo:"20 Nov 2026",teknisi:"Andi"},
-{id:4,nama:"Asep Saepudin",nik:"3201123456780004",paket:"30 Mbps",harga:125000,alamat:"Kp. Warnasari RT 01",status:"Aktif",odp:"ODP-WRN-01",sn:"HWTC22334455",ip:"192.168.1.104",rx:"-19.2 dBm",bayar:"Belum Lunas",hp:"628123456792",jatuhTempo:"28 Nov 2026",teknisi:"Budi"},
-{id:5,nama:"Ibu Tini",nik:"3201123456780005",paket:"20 Mbps",harga:100000,alamat:"Kp. Warnasari RT 04",status:"Isolir",odp:"ODP-WRN-02",sn:"VSOL11223344",ip:"192.168.1.105",rx:"-25.5 dBm",bayar:"Belum Lunas",hp:"628123456793",jatuhTempo:"15 Nov 2026",teknisi:"Andi"},
+const clientsAwal=[
+{id:1,nama:"Dole",paket:"30 Mbps",harga:125000,alamat:"Kp. Warnasari RT 01",status:"Aktif",sn:"HWTC11223344",ip:"192.168.1.101",rx:"-20.1 dBm",bayar:"Belum Lunas",hp:"628123456789",odp:"ODP-WRN-01"},
+{id:2,nama:"Sulaeman",paket:"20 Mbps",harga:100000,alamat:"Kp. Warnasari RT 02",status:"Aktif",sn:"VSOL99887766",ip:"192.168.1.102",rx:"-18.8 dBm",bayar:"Lunas",hp:"628123456790",odp:"ODP-WRN-01"},
+{id:3,nama:"Rudi Hartono",paket:"50 Mbps",harga:180000,alamat:"Kp. Warnasari RT 03",status:"Aktif",sn:"HWTC55667788",ip:"192.168.1.103",rx:"-22.1 dBm",bayar:"Lunas",hp:"628123456791",odp:"ODP-WRN-02"},
+{id:4,nama:"Asep Saepudin",paket:"30 Mbps",harga:125000,alamat:"Kp. Warnasari RT 01",status:"Aktif",sn:"HWTC22334455",ip:"192.168.1.104",rx:"-19.2 dBm",bayar:"Belum Lunas",hp:"628123456792",odp:"ODP-WRN-01"},
+{id:5,nama:"Ibu Tini",paket:"20 Mbps",harga:100000,alamat:"Kp. Warnasari RT 04",status:"Isolir",sn:"VSOL11223344",ip:"192.168.1.105",rx:"-25.5 dBm",bayar:"Belum Lunas",hp:"628123456793",odp:"ODP-WRN-02"},
 ];
 function App(){
 const [isLoggedIn,setIsLoggedIn]=useState(false);
 const [user,setUser]=useState({username:"",password:""});
-const [dark,setDark]=useState(false);
 const [tab,setTab]=useState("dashboard");
 const [search,setSearch]=useState("");
+const [clients,setClients]=useState(clientsAwal);
+const [newClient,setNewClient]=useState({nama:"",paket:"30 Mbps",alamat:"",hp:"",sn:""});
 const [laguNyala,setLaguNyala]=useState(false);
-const [clients,setClients]=useState(initialClients);
-const [newClient,setNewClient]=useState({nama:"",nik:"",paket:"30 Mbps",alamat:"",hp:"",sn:"",odp:"ODP-WRN-01"});
-const [tickets,setTickets]=useState([{id:"TCK-001",nama:"Dole",masalah:"Gangguan Jaringan / Lemot",status:"Darurat",teknisi:"Andi"},{id:"TCK-002",nama:"Sulaeman",masalah:"LOS Merah",status:"Proses",teknisi:"Budi"}]);
-const login=(e)=>{e.preventDefault(); if((user.username==="admin"&&user.password==="admin")||(user.username==="kasir"&&user.password==="kasir")) setIsLoggedIn(true); else alert("Salah! Coba admin / admin");};
-const hargaPaket=(p)=>p==="20 Mbps"?100000:p==="30 Mbps"?125000:p==="50 Mbps"?180000:250000;
-const tambah=(e)=>{e.preventDefault(); if(!newClient.nama) return alert("Nama wajib diisi"); const id=clients.length+1; setClients([...clients,{id,nama:newClient.nama,nik:newClient.nik||"32011"+Math.floor(Math.random()*10000000000),paket:newClient.paket,harga:hargaPaket(newClient.paket),alamat:newClient.alamat||"Kp. Warnasari",status:"Aktif",odp:newClient.odp,sn:newClient.sn||"HWTC"+Math.floor(Math.random()*100000000),ip:"192.168.1."+(100+id),rx:"-19.5 dBm",bayar:"Belum Lunas",hp:newClient.hp||"62812",jatuhTempo:"28 Des 2026",teknisi:"Andi"}]); setNewClient({nama:"",nik:"",paket:"30 Mbps",alamat:"",hp:"",sn:"",odp:"ODP-WRN-01"}); alert("Berhasil!"); setTab("pelanggan");};
+const [lebahTerang,setLebahTerang]=useState(false);
+const [darkDalam,setDarkDalam]=useState(false);
+
+// KLIK LEBAH = LAYAR TERANG + LAGU NYALA
+const klikLebah=()=>{
+  const baru=!lebahTerang;
+  setLebahTerang(baru);
+  setLaguNyala(true);
+  if(baru){ alert("🐝 LEBAH DI PENCET! Layar jadi TERANG + Lagu Kroncong Protol nyala!"); }
+};
+
+const login=(e)=>{e.preventDefault(); if(user.username==="admin"&&user.password==="admin"||user.username==="kasir"&&user.password==="kasir") setIsLoggedIn(true); else alert("Coba admin / admin");};
+const harga=(p)=>p==="20 Mbps"?100000:p==="30 Mbps"?125000:p==="50 Mbps"?180000:250000;
+const tambah=(e)=>{e.preventDefault(); if(!newClient.nama) return alert("Nama wajib diisi"); setClients([...clients,{id:clients.length+1,nama:newClient.nama,paket:newClient.paket,harga:harga(newClient.paket),alamat:newClient.alamat||"Kp. Warnasari",status:"Aktif",sn:newClient.sn||"HWTC"+Math.floor(Math.random()*100000000),ip:"192.168.1."+(101+clients.length),rx:"-19.5 dBm",bayar:"Belum Lunas",hp:newClient.hp||"62812",odp:"ODP-WRN-01"}]); setNewClient({nama:"",paket:"30 Mbps",alamat:"",hp:"",sn:""}); alert("Berhasil ditambah!"); setTab("pelanggan");};
 const toggleLunas=(id)=>{setClients(clients.map(c=>c.id===id?{...c,bayar:c.bayar==="Lunas"?"Belum Lunas":"Lunas"}:c));};
-const filtered=clients.filter(c=>c.nama.toLowerCase().includes(search.toLowerCase())||c.sn.toLowerCase().includes(search.toLowerCase()));
-const menus=[{id:"dashboard",label:"📊 Dashboard"},{id:"pelanggan",label:"👥 Pelanggan"},{id:"tambah",label:"➕ Tambah"},{id:"tagihan",label:"🧾 Tagihan"},{id:"keuangan",label:"💰 Keuangan"},{id:"odp",label:"📡 ODP / OLT"},{id:"stb",label:"📺 STB / VPS"},{id:"teknisi",label:"👷 Teknisi"},{id:"tiket",label:"🎫 Tiket"},{id:"laporan",label:"📈 Laporan"},{id:"pengaturan",label:"⚙️ Pengaturan"},{id:"broadcast",label:"📣 Broadcast WA"}];
+const hapus=(id)=>{if(confirm("Hapus?")) setClients(clients.filter(c=>c.id!==id));};
+const filtered=clients.filter(c=>c.nama.toLowerCase().includes(search.toLowerCase()));
+const menus=[{id:"dashboard",label:"📊 Dashboard"},{id:"pelanggan",label:"👥 Pelanggan"},{id:"tambah",label:"➕ Tambah"},{id:"tagihan",label:"🧾 Tagihan"},{id:"keuangan",label:"💰 Keuangan"},{id:"odp",label:"📡 ODP / OLT"},{id:"stb",label:"📺 STB / VPS"},{id:"teknisi",label:"👷 Teknisi"},{id:"tiket",label:"🎫 Tiket"},{id:"laporan",label:"📈 Laporan"},{id:"pengaturan",label:"⚙️ Pengaturan"},{id:"broadcast",label:"📣 Broadcast"}];
 const totalMasuk=clients.filter(c=>c.bayar==="Lunas").reduce((a,b)=>a+b.harga,0);
 const totalPiutang=clients.filter(c=>c.bayar!=="Lunas").reduce((a,b)=>a+b.harga,0);
 
-// ===== LOGIN YANG LU MAU - PERSIS SCREENSHOT =====
+// ===== LOGIN - LEBAH BISA DI PENCET =====
 if(!isLoggedIn){
+const bgTerang=lebahTerang?"linear-gradient(180deg,#FFFACD,#FFD700,#FFB800)":"radial-gradient(ellipse at center,#2b2b2b 0%,#111 60%,#000 100%)";
 return(
-<div className="min-h-screen flex items-center justify-center p-4" style={{background:"radial-gradient(ellipse at center, #2b2b2b 0%, #111 55%, #000 100%)"}}>
-<div className="login-card w-full max-w-md rounded-[28px] p-6 relative overflow-hidden">
-{/* NOT MUSIK MELAYANG */}
-<span className="float-note" style={{left:"18%",top:"18%",animationDelay:"0s"}}>🎵</span>
-<span className="float-note" style={{left:"78%",top:"14%",animationDelay:"0.8s",fontSize:"26px"}}>🎶</span>
-<span className="float-note" style={{left:"12%",top:"38%",animationDelay:"1.4s"}}>🎵</span>
-<span className="float-note" style={{left:"84%",top:"42%",animationDelay:"2s",fontSize:"18px"}}>🎶</span>
-<span className="float-note" style={{left:"28%",top:"8%",animationDelay:"1s",fontSize:"16px"}}>✨</span>
-<span className="float-note" style={{left:"68%",top:"32%",animationDelay:"0.4s",fontSize:"16px"}}>✨</span>
+<div className="min-h-screen flex items-center justify-center p-4" style={{background:bgTerang,transition:"0.5s"}}>
+<div className={"w-full max-w-md rounded-[28px] p-6 relative overflow-hidden "+(lebahTerang?"card-terang":"card-dark")} style={{transition:"0.5s"}}>
+<span className="float-note" style={{left:"18%",top:"20%"}}>🎵</span>
+<span className="float-note" style={{left:"80%",top:"15%",animationDelay:"0.8s"}}>🎶</span>
+<span className="float-note" style={{left:"12%",top:"40%",animationDelay:"1.4s"}}>🎵</span>
+<span className="float-note" style={{left:"85%",top:"42%",animationDelay:"2s"}}>🎶</span>
 
 <div className="text-center relative z-10">
-{/* LEBAH + CAHAYA EMAS */}
-<div className="glow-bee"><span className="text-[72px] drop-shadow-lg">🐝</span></div>
-<h1 className="text-[36px] font-black tracking-tight mt-4 leading-none"><span className="text-white">HACHI</span> <span style={{color:"#FFD700",textShadow:"0 0 20px rgba(255,215,0,0.8)"}}>NET</span></h1>
-<p className="text-gray-400 text-[13px] mt-2">Warnasari • Internet Cepat, Harga Merakyat</p>
-<div className="flex justify-center gap-2 mt-3">
-<span className="text-[11px] bg-[#222] border border-green-500/30 text-green-400 px-2 py-1 rounded-full">● 5 Pelanggan Online</span>
-<span className="text-[11px] bg-[#222] border border-yellow-500/30 text-yellow-400 px-2 py-1 rounded-full">OLT Online</span>
-</div>
+{/* LEBAH BISA DI PENCET */}
+<button onClick={klikLebah} className={"glow-bee "+(lebahTerang?"glow-terang":"glow-dark")} title="Pencet lebahnya!"><span className="text-[70px]">🐝</span></button>
+<p className={"text-[11px] font-bold mt-2 "+(lebahTerang?"text-orange-600":"text-yellow-400")}>{lebahTerang?"✨ LAYAR TERANG! LAGU NYALA! ✨":"👆 PENCET LEBAHNYA! 👆"}</p>
+<h1 className="text-[34px] font-black leading-none mt-2"><span className={lebahTerang?"text-black":"text-white"}>HACHI</span> <span style={{color:"#FFD700",textShadow:lebahTerang?"none":"0 0 20px rgba(255,215,0,0.8)"}}>NET</span></h1>
+<p className={"text-[13px] mt-2 "+(lebahTerang?"text-gray-700":"text-gray-400")}>Warnasari • Internet Cepat, Harga Merakyat</p>
+<div className="flex justify-center gap-2 mt-3"><span className="text-[11px] bg-green-100 text-green-700 px-2 py-1 rounded-full">● 5 Pelanggan Online</span><span className="text-[11px] bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">OLT Online</span></div>
 </div>
 
-<form onSubmit={login} className="mt-6 space-y-3 relative z-10">
-<input value={user.username} onChange={e=>setUser({...user,username:e.target.value})} placeholder="Username" className="input-dark w-full rounded-2xl px-4 py-3.5 text-[15px]"/>
-<input type="password" value={user.password} onChange={e=>setUser({...user,password:e.target.value})} placeholder="Password" className="input-dark w-full rounded-2xl px-4 py-3.5 text-[15px]"/>
-<button className="w-full py-3.5 rounded-2xl font-black text-black text-[15px] shadow-lg" style={{background:"linear-gradient(180deg,#FFD700,#FFB800)",boxShadow:"0 8px 25px rgba(255,215,0,0.4)"}}>MASUK 🚀</button>
+<form onSubmit={login} className="mt-5 space-y-3 relative z-10">
+<input value={user.username} onChange={e=>setUser({...user,username:e.target.value})} placeholder="Username" className={"w-full rounded-2xl px-4 py-3.5 "+(lebahTerang?"input-terang":"input-dark")}/>
+<input type="password" value={user.password} onChange={e=>setUser({...user,password:e.target.value})} placeholder="Password" className={"w-full rounded-2xl px-4 py-3.5 "+(lebahTerang?"input-terang":"input-dark")}/>
+<button className="w-full py-3.5 rounded-2xl font-black text-black" style={{background:"linear-gradient(180deg,#FFD700,#FFB800)"}}>MASUK 🚀</button>
 </form>
 
-<div className="mt-4 bg-[#1a1a1a] border border-[#333] rounded-2xl p-3 text-[12px] leading-relaxed text-gray-300 relative z-10">
-<b className="text-white">Demo Login:</b><br/>Admin : admin / admin<br/>Kasir : kasir / kasir
-</div>
+<div className={"mt-4 rounded-2xl p-3 text-[12px] relative z-10 "+(lebahTerang?"bg-white text-gray-700":"bg-[#111] text-gray-300 border border-[#333]")}><b>Demo Login:</b><br/>Admin : admin / admin<br/>Kasir : kasir / kasir</div>
 
 <div className="mt-4 text-center relative z-10">
-<button onClick={()=>setLaguNyala(!laguNyala)} className="text-[13px] font-bold px-4 py-2 rounded-full" style={{background:"#2a1a1a",color:"#FFD700",border:"1px solid rgba(255,215,0,0.4)"}}>▶️ {laguNyala?"Matikan Lagu":"Putar Lagu Kroncong Protol"}</button>
-{laguNyala && <div className="mt-3"><iframe width="100%" height="180" style={{borderRadius:"16px"}} src="https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1" allow="autoplay" frameborder="0"></iframe><p className="text-[11px] text-gray-500 mt-1">Kroncong Protol - Bondan Prakoso 🎵</p></div>}
+<button onClick={()=>setLaguNyala(!laguNyala)} className="text-[13px] font-bold px-4 py-2 rounded-full" style={{background:lebahTerang?"white":"#2a1a1a",color:"#B8860B",border:"1px solid #FFD700"}}>▶️ {laguNyala?"Matikan Lagu":"Putar Lagu Kroncong Protol"}</button>
+{laguNyala && <div className="mt-3"><iframe width="100%" height="180" style={{borderRadius:"16px"}} src="https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1" allow="autoplay" frameborder="0"></iframe><p className="text-[11px] text-gray-500 mt-1">🎵 Kroncong Protol - Lagi Muter...</p></div>}
 </div>
-<p className="text-center text-[11px] text-gray-600 mt-4 relative z-10">© 2026 Hachi Net Warnasari • Dibuat untuk Warga Warnasari</p>
+<p className="text-center text-[11px] text-gray-500 mt-4">© 2026 Hachi Net Warnasari</p>
 </div>
 </div>);
 }
 
-// ===== DALEM APLIKASI - FULL =====
-return(<div className={"min-h-screen pb-20 "+(dark?"bg-gray-900 text-white":"bg-gray-100")}>
-<div className="bg-amber-400 p-4 flex justify-between items-center sticky top-0 z-20 shadow"><div className="flex items-center gap-2"><span className="text-3xl">🐝</span><div><b className="text-lg leading-none">HACHI NET</b><p className="text-[11px]">Warnasari • {user.username}</p></div></div><div className="flex gap-2"><button onClick={()=>setDark(!dark)} className="bg-black text-white text-xs px-3 py-2 rounded-full">{dark?"☀️":"🌙"}</button><button onClick={()=>setIsLoggedIn(false)} className="bg-white text-black text-xs font-bold px-3 py-2 rounded-full">Keluar</button></div></div>
-<div className="p-4 max-w-6xl mx-auto">
+// ===== DALEM - VERSI RAPI, GA BERANTAKAN =====
+return(
+<div className={"min-h-screen "+(darkDalam?"bg-gray-900 text-white":"bg-gray-100 text-black")}>
+<div className="bg-amber-400 p-4 flex justify-between items-center sticky top-0 z-20"><div className="flex items-center gap-2"><button onClick={()=>{setLaguNyala(true); alert("🐝 Lebah dipencet! Lagu Kroncong Protol nyala!");}} className="text-3xl">🐝</button><div><b className="text-lg leading-none">HACHI NET</b><p className="text-[11px]">Warnasari • {user.username}</p></div></div><div className="flex gap-2"><button onClick={()=>setDarkDalam(!darkDalam)} className="bg-black text-white text-xs px-3 py-2 rounded-full">{darkDalam?"☀️":"🌙"}</button><button onClick={()=>setIsLoggedIn(false)} className="bg-white text-black text-xs font-bold px-3 py-2 rounded-full">Keluar</button></div></div>
+
+<div className="p-4 max-w-3xl mx-auto pb-24">
 <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">{menus.map(m=>(<button key={m.id} onClick={()=>setTab(m.id)} className={"px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap shrink-0 "+(tab===m.id?"bg-black text-white":"bg-white text-black shadow")}>{m.label}</button>))}</div>
-{tab==="dashboard" && <div><div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2"><div className="bg-white text-black rounded-3xl p-4 shadow"><p className="text-xs text-gray-500">Total Pelanggan</p><b className="text-2xl">{clients.length} Orang</b></div><div className="bg-white text-black rounded-3xl p-4 shadow"><p className="text-xs text-gray-500">Aktif</p><b className="text-2xl text-green-600">{clients.filter(c=>c.status==="Aktif").length}</b></div><div className="bg-white text-black rounded-3xl p-4 shadow"><p className="text-xs text-gray-500">Belum Lunas</p><b className="text-2xl text-red-500">{clients.filter(c=>c.bayar==="Belum Lunas").length}</b></div><div className="bg-white text-black rounded-3xl p-4 shadow"><p className="text-xs text-gray-500">Pendapatan</p><b className="text-lg">Rp {clients.reduce((a,b)=>a+b.harga,0).toLocaleString("id-ID")}</b></div></div>
-<div className="bg-white text-black rounded-3xl p-4 shadow mt-3"><b>🎵 Lagu & STB VPS</b><button onClick={()=>setLaguNyala(!laguNyala)} className="mt-3 bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold block">{laguNyala?"⏸️ Matikan":"▶️ Putar Kroncong Protol"}</button>{laguNyala && <iframe className="mt-3 w-full rounded-2xl" height="180" src="https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1" allow="autoplay" frameborder="0"></iframe>}</div>
-<div className="bg-white text-black rounded-3xl p-4 shadow mt-3"><b>📡 OLT & MikroTik</b><p className="text-sm mt-2">OLT VSOL - 192.168.1.100 - <span className="text-green-600 font-bold">● Online</span></p><p className="text-sm">MikroTik RB4011 - 192.168.1.1 - <span className="text-green-600 font-bold">● Online</span></p><p className="text-sm">STB VPS - 192.168.1.201 - <span className="text-green-600 font-bold">● Online</span></p></div></div>}
-{tab==="pelanggan" && <div className="mt-3"><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Cari nama / SN..." className="w-full bg-white text-black rounded-2xl px-4 py-3 mb-3 shadow"/>{filtered.map(c=>(<div key={c.id} className="bg-white text-black rounded-3xl p-4 mb-3 shadow"><div className="flex justify-between"><b>{c.nama}</b><span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">{c.status}</span></div><p className="text-sm text-gray-500">{c.paket} • Rp {c.harga.toLocaleString("id-ID")} • {c.bayar}</p><p className="text-xs mt-2">SN: {c.sn} | IP: {c.ip} | RX: {c.rx} | ODP: {c.odp}<br/>📍 {c.alamat} • 📞 {c.hp} • Tempo: {c.jatuhTempo}</p><div className="flex gap-2 mt-3"><a href={"https://wa.me/"+c.hp} target="_blank" className="bg-green-500 text-white text-xs px-3 py-2 rounded-full font-bold">💬 WA</a><button onClick={()=>toggleLunas(c.id)} className="bg-amber-400 text-xs px-3 py-2 rounded-full font-bold">Tandai Lunas</button></div></div>))}</div>}
-{tab==="tambah" && <form onSubmit={tambah} className="bg-white text-black rounded-3xl p-4 mt-3 space-y-3 shadow"><b>➕ Tambah Pelanggan</b><input value={newClient.nama} onChange={e=>setNewClient({...newClient,nama:e.target.value})} placeholder="Nama *" className="w-full border-2 rounded-2xl px-4 py-3"/><input value={newClient.hp} onChange={e=>setNewClient({...newClient,hp:e.target.value})} placeholder="No WA 62812..." className="w-full border-2 rounded-2xl px-4 py-3"/><input value={newClient.alamat} onChange={e=>setNewClient({...newClient,alamat:e.target.value})} placeholder="Alamat" className="w-full border-2 rounded-2xl px-4 py-3"/><input value={newClient.sn} onChange={e=>setNewClient({...newClient,sn:e.target.value})} placeholder="SN Modem / STB" className="w-full border-2 rounded-2xl px-4 py-3"/><select value={newClient.paket} onChange={e=>setNewClient({...newClient,paket:e.target.value})} className="w-full border-2 rounded-2xl px-4 py-3"><option>20 Mbps - Rp 100.000</option><option>30 Mbps - Rp 125.000</option><option>50 Mbps - Rp 180.000</option><option>100 Mbps - Rp 250.000</option></select><button className="w-full bg-amber-400 font-black py-3 rounded-2xl">Simpan 🚀</button></form>}
-{tab==="tagihan" && <div className="bg-white text-black rounded-3xl p-4 mt-3 shadow"><b>🧾 Tagihan</b>{clients.map(c=>(<div key={c.id} className="flex justify-between border-b py-3 text-sm"><span>{c.nama} - {c.paket}</span><span className="font-bold">Rp {c.harga.toLocaleString("id-ID")} - {c.bayar}</span></div>))}<p className="font-bold mt-3">Total: Rp {clients.reduce((a,b)=>a+b.harga,0).toLocaleString("id-ID")}</p></div>}
-{tab==="keuangan" && <div className="bg-white text-black rounded-3xl p-4 mt-3 shadow"><b>💰 Keuangan</b><p className="text-sm mt-2">Masuk: Rp {totalMasuk.toLocaleString("id-ID")}</p><p className="text-sm">Piutang: Rp {totalPiutang.toLocaleString("id-ID")}</p><p className="text-sm font-bold mt-2">Laba: Rp {(totalMasuk-450000).toLocaleString("id-ID")}</p></div>}
-{tab==="odp" && <div className="bg-white text-black rounded-3xl p-4 mt-3 shadow"><b>📡 ODP / OLT</b><p className="text-sm mt-2">ODP-WRN-01 - 5/8 Port - 62% • ODP-WRN-02 - 3/8 Port - 37%</p><p className="text-sm">OLT VSOL 192.168.1.100 • MikroTik 192.168.1.1</p></div>}
-{tab==="stb" && <div className="bg-white text-black rounded-3xl p-4 mt-3 shadow"><b>📺 STB / VPS</b><p className="text-sm mt-2">STB 1 HG680P - 192.168.1.201 - ● Online - RAM 68%</p><p className="text-sm">STB 2 B860H - 192.168.1.202 - ● Standby</p></div>}
-{tab==="teknisi" && <div className="bg-white text-black rounded-3xl p-4 mt-3 shadow"><b>👷 Teknisi</b><p className="text-sm mt-2">Andi - Warnasari Timur - Siaga • Budi - Warnasari Barat - Di Lapangan</p></div>}
-{tab==="tiket" && <div className="bg-white text-black rounded-3xl p-4 mt-3 shadow"><b>🎫 Tiket</b>{tickets.map(t=>(<p key={t.id} className="text-sm mt-2">{t.id} - {t.nama} - {t.masalah} - {t.status} - {t.teknisi}</p>))}</div>}
-{tab==="laporan" && <div className="bg-white text-black rounded-3xl p-4 mt-3 shadow"><b>📈 Laporan</b><p className="text-sm mt-2">Total: {clients.length} • Pendapatan: Rp {clients.reduce((a,b)=>a+b.harga,0).toLocaleString("id-ID")} • Kepuasan 95%</p></div>}
-{tab==="pengaturan" && <div className="bg-white text-black rounded-3xl p-4 mt-3 shadow"><b>⚙️ Pengaturan</b><p className="text-sm mt-2">Hachi Net Warnasari • Harga 20/30/50/100 Mbps • Jatuh Tempo Tgl 28 • WA Gateway via STB VPS</p></div>}
-{tab==="broadcast" && <div className="bg-white text-black rounded-3xl p-4 mt-3 shadow"><b>📣 Broadcast WA</b><textarea placeholder="Tulis pesan broadcast..." className="w-full border-2 rounded-2xl px-4 py-3 h-24 mt-3"></textarea><button onClick={()=>alert("Broadcast terkirim ke "+clients.length+" pelanggan!")} className="w-full mt-3 bg-green-500 text-white font-bold py-3 rounded-2xl">Kirim Broadcast</button></div>}
+
+{tab==="dashboard" && <div>
+<div className="grid grid-cols-2 gap-3 mt-2"><div className="bg-white text-black rounded-2xl p-4 shadow"><p className="text-xs text-gray-500">Total Pelanggan</p><b className="text-2xl">{clients.length} Orang</b></div><div className="bg-white text-black rounded-2xl p-4 shadow"><p className="text-xs text-gray-500">Aktif</p><b className="text-2xl text-green-600">{clients.filter(c=>c.status==="Aktif").length}</b></div><div className="bg-white text-black rounded-2xl p-4 shadow"><p className="text-xs text-gray-500">Belum Lunas</p><b className="text-2xl text-red-500">{clients.filter(c=>c.bayar==="Belum Lunas").length}</b></div><div className="bg-white text-black rounded-2xl p-4 shadow"><p className="text-xs text-gray-500">Pendapatan</p><b>Rp {clients.reduce((a,b)=>a+b.harga,0).toLocaleString("id-ID")}</b></div></div>
+<div className="bg-white text-black rounded-2xl p-4 shadow mt-3"><b>🐝 Pencet Lebah di Atas!</b><p className="text-sm text-gray-600 mt-1">Kalo lebah di atas dipencet, lagu Kroncong Protol langsung muter. Coba pencet!</p><button onClick={()=>setLaguNyala(!laguNyala)} className="mt-3 bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold">{laguNyala?"⏸️ Matikan":"▶️ Putar Kroncong Protol"}</button>{laguNyala && <iframe className="mt-3 w-full rounded-xl" height="180" src="https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1" allow="autoplay" frameborder="0"></iframe>}</div>
+<div className="bg-white text-black rounded-2xl p-4 shadow mt-3"><b>📡 OLT & MikroTik</b><p className="text-sm mt-2">OLT VSOL 192.168.1.100 - <span className="text-green-600 font-bold">● Online</span></p><p className="text-sm">MikroTik 192.168.1.1 - <span className="text-green-600 font-bold">● Online</span></p><p className="text-sm">STB VPS 192.168.1.201 - <span className="text-green-600 font-bold">● Online</span></p></div>
+</div>}
+
+{tab==="pelanggan" && <div className="mt-3"><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Cari nama..." className="w-full bg-white text-black rounded-2xl px-4 py-3 mb-3 shadow"/>{filtered.map(c=>(<div key={c.id} className="bg-white text-black rounded-2xl p-4 mb-3 shadow"><div className="flex justify-between"><b>{c.nama}</b><span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">{c.status}</span></div><p className="text-sm text-gray-500">{c.paket} • Rp {c.harga.toLocaleString("id-ID")} • {c.bayar}</p><p className="text-xs mt-2">SN: {c.sn}<br/>IP: {c.ip} | RX: {c.rx} | {c.odp}<br/>📍 {c.alamat} • 📞 {c.hp}</p><div className="flex gap-2 mt-3 flex-wrap"><a href={"https://wa.me/"+c.hp} target="_blank" className="bg-green-500 text-white text-xs px-3 py-2 rounded-full font-bold">💬 WA</a><button onClick={()=>toggleLunas(c.id)} className="bg-amber-400 text-xs px-3 py-2 rounded-full font-bold">Tandai Lunas</button><button onClick={()=>hapus(c.id)} className="bg-red-100 text-red-600 text-xs px-3 py-2 rounded-full font-bold">Hapus</button></div></div>))}</div>}
+
+{tab==="tambah" && <form onSubmit={tambah} className="bg-white text-black rounded-2xl p-4 mt-3 space-y-3 shadow"><b>➕ Tambah Pelanggan</b><input value={newClient.nama} onChange={e=>setNewClient({...newClient,nama:e.target.value})} placeholder="Nama *" className="w-full border rounded-2xl px-4 py-3"/><input value={newClient.hp} onChange={e=>setNewClient({...newClient,hp:e.target.value})} placeholder="No WA 62812..." className="w-full border rounded-2xl px-4 py-3"/><input value={newClient.alamat} onChange={e=>setNewClient({...newClient,alamat:e.target.value})} placeholder="Alamat" className="w-full border rounded-2xl px-4 py-3"/><input value={newClient.sn} onChange={e=>setNewClient({...newClient,sn:e.target.value})} placeholder="SN Modem / STB" className="w-full border rounded-2xl px-4 py-3"/><select value={newClient.paket} onChange={e=>setNewClient({...newClient,paket:e.target.value})} className="w-full border rounded-2xl px-4 py-3"><option>20 Mbps - Rp 100.000</option><option>30 Mbps - Rp 125.000</option><option>50 Mbps - Rp 180.000</option><option>100 Mbps - Rp 250.000</option></select><button className="w-full bg-amber-400 font-bold py-3 rounded-2xl">Simpan 🚀</button></form>}
+
+{tab==="tagihan" && <div className="bg-white text-black rounded-2xl p-4 mt-3 shadow"><b>🧾 Tagihan</b>{clients.map(c=>(<div key={c.id} className="flex justify-between border-b py-3 text-sm"><span>{c.nama} - {c.paket}</span><span className="font-bold">Rp {c.harga.toLocaleString("id-ID")} - {c.bayar}</span></div>))}<p className="font-bold mt-3">Total: Rp {clients.reduce((a,b)=>a+b.harga,0).toLocaleString("id-ID")}</p></div>}
+{tab==="keuangan" && <div className="bg-white text-black rounded-2xl p-4 mt-3 shadow"><b>💰 Keuangan</b><p className="text-sm mt-2">Masuk: Rp {totalMasuk.toLocaleString("id-ID")}</p><p className="text-sm">Piutang: Rp {totalPiutang.toLocaleString("id-ID")}</p><p className="text-sm font-bold mt-2">Laba: Rp {(totalMasuk-450000).toLocaleString("id-ID")}</p></div>}
+{tab==="odp" && <div className="bg-white text-black rounded-2xl p-4 mt-3 shadow"><b>📡 ODP / OLT</b><p className="text-sm mt-2">ODP-WRN-01 - 5/8 Port - 62%</p><p className="text-sm">ODP-WRN-02 - 3/8 Port - 37%</p><p className="text-sm">OLT VSOL 192.168.1.100 • MikroTik 192.168.1.1</p></div>}
+{tab==="stb" && <div className="bg-white text-black rounded-2xl p-4 mt-3 shadow"><b>📺 STB / VPS</b><p className="text-sm mt-2">STB 1 HG680P - 192.168.1.201 - ● Online</p><p className="text-sm">STB 2 B860H - 192.168.1.202 - ● Standby</p></div>}
+{tab==="teknisi" && <div className="bg-white text-black rounded-2xl p-4 mt-3 shadow"><b>👷 Teknisi</b><p className="text-sm mt-2">Andi - Warnasari Timur - Siaga</p><p className="text-sm">Budi - Warnasari Barat - Di Lapangan</p></div>}
+{tab==="tiket" && <div className="bg-white text-black rounded-2xl p-4 mt-3 shadow"><b>🎫 Tiket</b><p className="text-sm mt-2">TCK-001 - Dole - Lemot - Darurat - Andi</p><p className="text-sm">TCK-002 - Sulaeman - LOS Merah - Proses - Budi</p></div>}
+{tab==="laporan" && <div className="bg-white text-black rounded-2xl p-4 mt-3 shadow"><b>📈 Laporan</b><p className="text-sm mt-2">Total: {clients.length} • Pendapatan: Rp {clients.reduce((a,b)=>a+b.harga,0).toLocaleString("id-ID")} • Kepuasan 95%</p></div>}
+{tab==="pengaturan" && <div className="bg-white text-black rounded-2xl p-4 mt-3 shadow"><b>⚙️ Pengaturan</b><p className="text-sm mt-2">Hachi Net Warnasari • Harga 20/30/50/100 Mbps • Jatuh Tempo Tgl 28</p></div>}
+{tab==="broadcast" && <div className="bg-white text-black rounded-2xl p-4 mt-3 shadow"><b>📣 Broadcast WA</b><textarea placeholder="Tulis pesan..." className="w-full border rounded-2xl px-4 py-3 h-24 mt-3"></textarea><button onClick={()=>alert("Broadcast terkirim ke "+clients.length+" pelanggan!")} className="w-full mt-3 bg-green-500 text-white font-bold py-3 rounded-2xl">Kirim Broadcast</button></div>}
+
 </div>
 <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t flex justify-around py-2 text-xs font-bold z-20"><button onClick={()=>setTab("dashboard")} className={tab==="dashboard"?"text-amber-500":"text-gray-400"}>🏠<br/>Home</button><button onClick={()=>setTab("pelanggan")} className={tab==="pelanggan"?"text-amber-500":"text-gray-400"}>👥<br/>Pelanggan</button><button onClick={()=>setTab("tambah")} className="bg-amber-400 w-12 h-12 -mt-6 rounded-full text-xl shadow-lg">+</button><button onClick={()=>setTab("tagihan")} className={tab==="tagihan"?"text-amber-500":"text-gray-400"}>🧾<br/>Tagihan</button><button onClick={()=>setTab("tiket")} className={tab==="tiket"?"text-amber-500":"text-gray-400"}>🎫<br/>Tiket</button></div>
 </div>);
