@@ -1,283 +1,172 @@
-import React, { useState, useRef } from 'react';
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hachi Net - Warnasari</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>body{font-family:system-ui,sans-serif} .no-scrollbar::-webkit-scrollbar{display:none}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState} = React;
 
-export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loginInput, setLoginInput] = useState({ username: '', password: '' });
-  const [usersList, setUsersList] = useState([
-    { id: 1, username: 'admin', role: 'developer', pass: 'admin' },
-    { id: 2, username: 'kasir', role: 'billing', pass: '12345' },
-    { id: 3, username: 'teknisi1', role: 'teknisi', pass: '12345' }
+function App(){
+  const [isLoggedIn,setIsLoggedIn]=useState(false);
+  const [user,setUser]=useState({username:"",password:""});
+  const [dark,setDark]=useState(false);
+  const [tab,setTab]=useState("dashboard");
+  const [search,setSearch]=useState("");
+  const [laguNyala,setLaguNyala]=useState(false);
+  const [clients,setClients]=useState([
+    {id:1,nama:"Dole",noIdentitas:"3201123456780001",paket:"30 Mbps",harga:125000,alamat:"Kp. 30 Mbps",status:"Aktif",odp:"ODP-WRN-01",sn:"HWTC11223344",ip:"192.168.1.101",rx:"-20.1 dBm",bayar:"Belum Lunas",hp:"62812-3456789"},
+    {id:2,nama:"Sulaeman",noIdentitas:"3201123456780002",paket:"20 Mbps",harga:100000,alamat:"Kp. Warnasari",status:"Aktif",odp:"ODP-WRN-01",sn:"VSOL99887766",ip:"192.168.1.102",rx:"-18.8 dBm",bayar:"Lunas",hp:"62812-3456790"},
+    {id:3,nama:"Rudi Hartono",noIdentitas:"3201123456780003",paket:"50 Mbps",harga:180000,alamat:"Kp. Warnasari",status:"Aktif",odp:"ODP-WRN-02",sn:"HWTC55667788",ip:"192.168.1.103",rx:"-22.1 dBm",bayar:"Lunas",hp:"62812-3456791"},
   ]);
-  const [formNewUser, setFormNewUser] = useState({ username: '', role: 'billing', pass: '' });
+  const [newClient,setNewClient]=useState({nama:"",paket:"30 Mbps",alamat:"",hp:"",sn:""});
 
-  // --- LOGIN FIBER + LEBAH + LAGU YOUTUBE + MODE SIANG/MALAM ---
-  const [lebahNyala, setLebahNyala] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
-  const [laguNyala, setLaguNyala] = useState(false);
-  const youtubeRef = useRef(null);
-
-  const mainYoutube = () => {
-    if (youtubeRef.current) {
-      youtubeRef.current.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-      setLaguNyala(true);
-    }
-  };
-  const stopYoutube = () => {
-    if (youtubeRef.current) {
-      youtubeRef.current.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-      setLaguNyala(false);
-    }
-  };
-  const pencetLebah = () => {
-    setLebahNyala(true);
-    mainYoutube();
-    setTimeout(() => setLebahNyala(false), 3000);
-  };
-  const nyalaMatiLagu = () => {
-    if (laguNyala) stopYoutube();
-    else mainYoutube();
-  };
-
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activityLogs, setActivityLogs] = useState([
-    { id: 1, time: '26 Apr 2026 - 08:30', user: 'admin', action: 'Sistem diinisialisasi & terhubung ke MikroTik API' },
-    { id: 2, time: '26 Apr 2026 - 09:15', user: 'kasir', action: 'Memverifikasi pembayaran via QRIS untuk CUST-001' }
-  ]);
-  const addLog = (user, actionText) => {
-    const newLog = { id: activityLogs.length + 1, time: new Date().toLocaleString('id-ID'), user: user || 'system', action: actionText };
-    setActivityLogs(prev => [newLog, ...prev]);
-  };
-  const [clients, setClients] = useState([
-    { docId: '1', id: 'CUST-001', name: 'Dole', noIdentitas: '3201123456780001', paket: '30 Mbps (Rp 125.000)', hargaKhusus: '110000', telepon: '628123456789', email: 'dole.warnasari@gmail.com', alamat: 'Jl. Melati No. 12, Warnasari', odp: 'ODP-WRN-01', odc: 'ODC-WRN-01', oltTerhubung: 'VSOL OLT (Area A)', tikor: '-6.524500, 106.801500', fotoRumah: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=400', snModem: 'VSOLa1b2c3d4', pppoeUser: 'dole_warnasari', pppoePass: 'mk9#xK2!p', vlan: '100', jenisOnt: 'GPON', ipModem: '192.168.1.10', rxPower: '-19.2 dBm', temp: '42°C', bandwidthUsage: '28.4 Mbps / 4.1 Mbps', status: 'Online', statusBayar: 'Lunas', tanggalBergabung: '15 Jan 2025', mikrotikSync: 'Active (Simple Queue Synced)' }
-  ]);
-  const [formRegistrasi, setFormRegistrasi] = useState({ name: '', noIdentitas: '', paket: '30 Mbps (Rp 125.000)', hargaKhusus: '', telepon: '628', email: '', alamat: '', odp: 'ODP-WRN-01', odc: 'ODC-WRN-01', tikor: '-6.524500, 106.801500', snModem: '', jenisOnt: 'GPON', vlan: '100' });
-  const [isScanningOlt, setIsScanningOlt] = useState(false);
-  const [detectedModems, setDetectedModems] = useState([
-    { sn: 'VSOL99887766', vendor: 'VSOL OLT (Area A)', rx: '-18.5 dBm', port: 'GPON 0/1/4' },
-    { sn: 'HWTC11223344', vendor: 'Huawei OLT (Area B)', rx: '-22.1 dBm', port: 'EPON 0/2/1' }
-  ]);
-  const [odcList, setOdcList] = useState([{ id: 1, nama: 'ODC-WRN-01', tikor: '-6.524100, 106.801000', patokan: 'Depan Ruko Niaga', kapasitas: '48 Core', terpakai: '36 Core', status: 'Aktif' }]);
-  const [odpList, setOdpList] = useState([{ id: 1, nama: 'ODP-WRN-01', tikor: '-6.524500, 106.801500', patokan: 'Tiang PLN No.12', portTotal: 16, portTerpakai: 12, status: 'Aktif' }]);
-  const [formOdp, setFormOdp] = useState({ nama: '', patokan: '', portTotal: '16', tikor: '-6.524500, 106.801500' });
-  const [oltList, setOltList] = useState([{ id: 1, nama: 'OLT Utama Warnasari', ip: '192.168.1.100', brand: 'VSOL C320', status: 'Online', ponPorts: 8 }]);
-  const [formOlt, setFormOlt] = useState({ nama: '', ip: '', brand: 'VSOL C320', ponPorts: '8' });
-  const [tiketList, setTiketList] = useState([{ id: 'TCK-001', pelanggan: 'Dole', kategori: 'Gangguan Jaringan', jenis: 'Redaman Tinggi (-28dBm)', prioritas: 'Darurat', teknisi: 'Teknisi 1', status: 'Proses', tanggal: '25 Apr 2026' }]);
-  const [formTiket, setFormTiket] = useState({ pelanggan: '', kategori: 'Gangguan Jaringan', jenis: 'Redaman Tinggi / LOS', prioritas: 'Normal', teknisi: 'Teknisi 1' });
-  const [networkNodes] = useState([
-    { name: 'Router Core MikroTik RB4014', ip: '192.168.1.1', ping: '2ms', status: 'Online' },
-    { name: 'VSOL OLT Utama (Area A)', ip: '192.168.1.100', ping: '4ms', status: 'Online' }
-  ]);
-
-  const handleLogin = (e) => {
+  const login=(e)=>{
     e.preventDefault();
-    const found = usersList.find(u => u.username === loginInput.username && u.pass === loginInput.password);
-    if (found) { setIsLoggedIn(true); setCurrentUser(found); addLog(found.username, 'Login ke dalam sistem administrator.'); }
-    else alert('Username atau Password salah!');
+    if(user.username==="admin" && user.password==="admin"){setIsLoggedIn(true);} 
+    else if(user.username==="kasir" && user.password==="kasir"){setIsLoggedIn(true);}
+    else{alert("Username / Password salah! Coba admin / admin");}
   };
-  const handleScanOlt = () => { setIsScanningOlt(true); setTimeout(() => { setIsScanningOlt(false); alert('Pemindaian OLT berhasil! Perangkat ONU baru terdeteksi.'); addLog(currentUser?.username, 'Melakukan scan perangkat ONU baru pada OLT.'); }, 1000); };
-  const handlePilihModemScan = (modem) => { setFormRegistrasi({ ...formRegistrasi, snModem: modem.sn }); alert(`SN Modem ${modem.sn} berhasil dimasukkan!`); };
-  const handleSimpanRegistrasi = (e) => {
+
+  const tambahPelanggan=(e)=>{
     e.preventDefault();
-    if (!formRegistrasi.name || !formRegistrasi.snModem || !formRegistrasi.noIdentitas) return alert('Nama, No Identitas, dan SN Modem wajib diisi!');
-    const randPass = Math.random().toString(36).slice(-8);
-    const newClient = { docId: 'cust-' + Date.now(), id: 'CUST-00' + (clients.length + 1), ...formRegistrasi, tanggalBergabung: '26 Apr 2026', ipModem: `192.168.1.${clients.length + 20}`, pppoeUser: formRegistrasi.name.toLowerCase().replace(/\s+/g, '_'), pppoePass: randPass, oltTerhubung: 'VSOL OLT (Area A)', rxPower: '-20.1 dBm', temp: '41°C', bandwidthUsage: '12.0 Mbps / 2.1 Mbps', status: 'Online', statusBayar: 'Belum Lunas', mikrotikSync: 'Active (Auto PPPoE & Queue Synced)' };
-    setClients([newClient, ...clients]);
-    setDetectedModems(detectedModems.filter(m => m.sn !== formRegistrasi.snModem));
-    addLog(currentUser?.username, `Registrasi pelanggan baru: ${newClient.name} (${newClient.id}) dengan sinkronisasi MikroTik API.`);
-    alert(`Registrasi Berhasil! Secret PPPoE & Queue tersinkron otomatis ke MikroTik. Pass: ${randPass}`);
-    setActiveTab('pelanggan');
+    if(!newClient.nama) return alert("Nama wajib diisi");
+    const harga = newClient.paket==="20 Mbps"?100000:newClient.paket==="30 Mbps"?125000:180000;
+    setClients([...clients,{id:clients.length+1,nama:newClient.nama,paket:newClient.paket,harga,alamat:newClient.alamat||"Kp. Warnasari",status:"Aktif",odp:"ODP-WRN-01",sn:newClient.sn||"HWTC"+Math.floor(Math.random()*100000000),ip:"192.168.1."+(100+clients.length+1),rx:"-19.5 dBm",bayar:"Belum Lunas",hp:newClient.hp}]);
+    setNewClient({nama:"",paket:"30 Mbps",alamat:"",hp:"",sn:""});
+    alert("Pelanggan berhasil ditambah! STB / ONT siap didaftarkan.");
   };
-  const handleTambahOdp = (e) => { e.preventDefault(); if (!formOdp.nama || !formOdp.patokan) return alert('Isi Nama & Patokan!'); setOdpList([...odpList, { id: odpList.length + 1, ...formOdp, portTotal: 16, portTerpakai: 0, status: 'Aktif' }]); setFormOdp({ nama: '', patokan: '', portTotal: '16', tikor: '-6.524500, 106.801500' }); addLog(currentUser?.username, `Menambahkan titik ODP baru: ${formOdp.nama}`); alert('ODP ditambahkan!'); };
-  const toggleOdpStatus = (id) => setOdpList(odpList.map(o => { if(o.id === id) { const nextStat = o.status === 'Aktif' ? 'Loss' : 'Aktif'; addLog(currentUser?.username, `Mengubah status ODP ${o.nama} menjadi ${nextStat}`); return { ...o, status: nextStat }; } return o; }));
-  const toggleOdcStatus = (id) => setOdcList(odcList.map(o => { if(o.id === id) { const nextStat = o.status === 'Aktif' ? 'Loss' : 'Aktif'; addLog(currentUser?.username, `Mengubah status ODC ${o.nama} menjadi ${nextStat}`); return { ...o, status: nextStat }; } return o; }));
-  const handleTambahOlt = (e) => { e.preventDefault(); setOltList([...oltList, { id: oltList.length + 1, ...formOlt, status: 'Online' }]); setFormOlt({ nama: '', ip: '', brand: 'VSOL C320', ponPorts: '8' }); addLog(currentUser?.username, `Menambahkan perangkat OLT baru: ${formOlt.nama} (${formOlt.ip})`); alert('OLT ditambahkan!'); };
-  const handleTambahTiket = (e) => { e.preventDefault(); const newT = { id: 'TCK-00' + (tiketList.length + 1), ...formTiket, status: 'Open', tanggal: '26 Apr 2026' }; setTiketList([...tiketList, newT]); addLog(currentUser?.username, `Membuat tiket baru (${newT.kategori}) untuk pelanggan ${newT.pelanggan}`); alert('Tiket dibuat!'); setFormTiket({ pelanggan: '', kategori: 'Gangguan Jaringan', jenis: 'Redaman Tinggi / LOS', prioritas: 'Normal', teknisi: 'Teknisi 1' }); };
-  const handleSelesaikanTiket = (tiketId) => { setTiketList(tiketList.map(t => t.id === tiketId ? { ...t, status: 'Selesai' } : t)); addLog(currentUser?.username, `Menyelesaikan tiket penanganan: ${tiketId}`); alert(`Tiket ${tiketId} berhasil diselesaikan!`); };
-  const handleTambahUserDeveloper = (e) => { e.preventDefault(); setUsersList([...usersList, { id: usersList.length + 1, ...formNewUser }]); addLog(currentUser?.username, `Membuat akun baru: ${formNewUser.username} (${formNewUser.role})`); setFormNewUser({ username: '', role: 'billing', pass: '' }); alert('Akun dibuat!'); };
-  const bukaMaps = (koordinat) => window.open(`https://www.google.com/maps?q=${koordinat.replace(/\s+/g, '')}`, '_blank');
 
-  const youtubeEmbed = (
-    <iframe ref={youtubeRef} src="https://www.youtube.com/embed/eaKxvjmEHgY?enablejsapi=1&autoplay=0&loop=1&playlist=eaKxvjmEHgY" style={{ width: '1px', height: '1px', opacity: 0, position: 'absolute', pointerEvents: 'none' }} allow="autoplay; encrypted-media" title="Kroncong Protol - Bondan Prakoso" />
-  );
+  const filtered = clients.filter(c=>c.nama.toLowerCase().includes(search.toLowerCase())||c.sn.toLowerCase().includes(search.toLowerCase()));
 
-  if (!isLoggedIn) {
+  if(!isLoggedIn){
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', fontFamily: 'Segoe UI, sans-serif', position: 'relative', overflow: 'hidden', background: isDarkMode ? 'radial-gradient(ellipse at top, #0a1628 0%, #020617 60%, #000000 100%)' : 'linear-gradient(135deg, #dbeafe 0%, #fef3c7 100%)' }}>
-        <style>{`
-          @keyframes fiberMove { 0% { transform: translateX(-20px); opacity: 0.5; } 50% { opacity: 1; } 100% { transform: translateX(20px); opacity: 0.5; } }
-          @keyframes glowPulse { 0%,100% { filter: drop-shadow(0 0 8px #FFD700) drop-shadow(0 0 20px #FFD700); transform: scale(1); } 50% { filter: drop-shadow(0 0 20px #FFD700) drop-shadow(0 0 45px #FFC300); transform: scale(1.15); } }
-          @keyframes floatNote { 0% { transform: translateY(0px) rotate(-10deg); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-35px) rotate(10deg); opacity: 0; } }
-          @keyframes flyBee { 0% { transform: translate(0px, 0px) rotate(0deg); } 25% { transform: translate(6px, -6px) rotate(8deg); } 50% { transform: translate(10px, 0px) rotate(0deg); } 75% { transform: translate(6px, 6px) rotate(-8deg); } 100% { transform: translate(0px, 0px) rotate(0deg); } }
-          .lebah-glow { animation: ${lebahNyala ? 'glowPulse 0.8s ease-in-out infinite' : 'flyBee 3s ease-in-out infinite'}; }
-          .not-musik { animation: floatNote 1.5s ease-in-out infinite; display: inline-block; }
-        `}</style>
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.6 }}>
-          <div style={{ position: 'absolute', top: '15%', left: '-10%', width: '120%', height: '2px', background: 'linear-gradient(90deg, transparent, #3b82f6, #f59e0b, transparent)', transform: 'rotate(-12deg)', animation: 'fiberMove 4s ease-in-out infinite alternate' }}></div>
-          <div style={{ position: 'absolute', top: '45%', left: '-10%', width: '120%', height: '2px', background: 'linear-gradient(90deg, transparent, #60a5fa, #fbbf24, transparent)', transform: 'rotate(8deg)', animation: 'fiberMove 5s ease-in-out infinite alternate' }}></div>
-          <div style={{ position: 'absolute', top: '75%', left: '-10%', width: '120%', height: '2px', background: 'linear-gradient(90deg, transparent, #2563eb, #f59e0b, transparent)', transform: 'rotate(-5deg)', animation: 'fiberMove 6s ease-in-out infinite alternate' }}></div>
-        </div>
-        <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 10, background: isDarkMode ? '#1e293b' : '#ffffff', color: isDarkMode ? '#fbbf24' : '#0f172a', border: '1px solid #334155', padding: '10px 16px', borderRadius: '999px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>{isDarkMode ? '☀️ Mode Siang' : '🌙 Mode Malam'}</button>
-        <form onSubmit={handleLogin} style={{ position: 'relative', zIndex: 2, backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', padding: '36px 36px 28px', borderRadius: '24px', width: '410px', maxWidth: '92vw', boxShadow: '0 25px 50px rgba(0,0,0,0.35)', border: isDarkMode ? '1px solid rgba(255,255,255,0.15)' : '1px solid #e2e8f0', color: isDarkMode ? '#fff' : '#0f172a', boxSizing: 'border-box' }}>
-          <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-              <button type="button" onClick={pencetLebah} title="Pencet lebahnya!" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '52px', lineHeight: 1, padding: 0 }}><span className="lebah-glow" style={{ display: 'inline-block' }}>🐝</span></button>
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ fontSize: '26px', fontWeight: '900', lineHeight: '1.1', color: isDarkMode ? '#fff' : '#0f172a' }}>HACHI NET</div>
-                <div style={{ fontSize: '26px', fontWeight: '900', lineHeight: '1.1', color: '#f59e0b' }}>WARNASARI</div>
-              </div>
-            </div>
-            {lebahNyala && (<div style={{ marginTop: '10px', fontSize: '24px' }}><span className="not-musik">🎵</span> <span className="not-musik" style={{ animationDelay: '0.3s' }}>🎶</span> <span className="not-musik" style={{ animationDelay: '0.6s' }}>🎵</span><div style={{ fontSize: '12px', color: '#fbbf24', fontWeight: 'bold', marginTop: '4px' }}>✨ Kroncong Protol lagi muter... ✨</div></div>)}
-            <h2 style={{ marginTop: '16px', fontSize: '18px', fontWeight: 'bold', color: isDarkMode ? '#fff' : '#0f172a', marginBottom: '4px' }}>Panel Administrator</h2>
-            <p style={{ fontSize: '13px', color: isDarkMode ? '#94a3b8' : '#64748b', margin: 0 }}>Pencet lebah 🐝 buat dengerin lagu</p>
+      <div className={"min-h-screen flex items-center justify-center p-4 "+(dark?"bg-gray-900":"bg-amber-400")}>
+        <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6">
+          <div className="text-center">
+            <div className="text-7xl">🐝</div>
+            <h1 className="text-3xl font-black mt-2">HACHI <span className="text-amber-500">NET</span></h1>
+            <p className="text-gray-500 text-sm">Warnasari • Internet Cepat, Harga Merakyat</p>
+            <button onClick={()=>setDark(!dark)} className="mt-3 text-xs bg-black text-white px-3 py-1 rounded-full">{dark?"☀️ Mode Siang":"🌙 Mode Malam"}</button>
           </div>
-          <div style={{ marginBottom: '18px' }}><label style={{ fontSize: '11px', color: isDarkMode ? '#94a3b8' : '#64748b', display: 'block', marginBottom: '6px', fontWeight: '700' }}>USERNAME</label><input type="text" value={loginInput.username} onChange={(e) => setLoginInput({ ...loginInput, username: e.target.value })} placeholder="admin" style={{ width: '100%', padding: '14px', borderRadius: '12px', border: isDarkMode ? '1px solid #334155' : '1px solid #cbd5e1', backgroundColor: isDarkMode ? '#0f172a' : '#f8fafc', color: isDarkMode ? '#fff' : '#0f172a', fontSize: '14px', boxSizing: 'border-box' }} required /></div>
-          <div style={{ marginBottom: '18px' }}><label style={{ fontSize: '11px', color: isDarkMode ? '#94a3b8' : '#64748b', display: 'block', marginBottom: '6px', fontWeight: '700' }}>PASSWORD</label><input type="password" value={loginInput.password} onChange={(e) => setLoginInput({ ...loginInput, password: e.target.value })} placeholder="admin" style={{ width: '100%', padding: '14px', borderRadius: '12px', border: isDarkMode ? '1px solid #334155' : '1px solid #cbd5e1', backgroundColor: isDarkMode ? '#0f172a' : '#f8fafc', color: isDarkMode ? '#fff' : '#0f172a', fontSize: '14px', boxSizing: 'border-box' }} required /></div>
-          <button type="submit" style={{ width: '100%', backgroundColor: '#f59e0b', color: '#0f172a', padding: '14px', borderRadius: '12px', border: 'none', fontWeight: '900', cursor: 'pointer', fontSize: '15px', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)' }}>Masuk Sistem</button>
-          <button type="button" onClick={nyalaMatiLagu} style={{ width: '100%', marginTop: '10px', background: 'transparent', color: isDarkMode ? '#fbbf24' : '#b45309', padding: '10px', borderRadius: '12px', border: isDarkMode ? '1px solid #334155' : '1px solid #fde68a', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>{laguNyala ? '⏸️ Matiin Lagu' : '▶️ Nyalain Lagu Kroncong Protol'}</button>
-          <p style={{ textAlign: 'center', fontSize: '12px', color: isDarkMode ? '#94a3b8' : '#64748b', marginTop: '16px', marginBottom: 0 }}>Default Login: admin / admin</p>
-          <p style={{ textAlign: 'center', fontSize: '11px', color: isDarkMode ? '#64748b' : '#94a3b8', marginTop: '8px', marginBottom: 0 }}>© HACHI NET WARNASARI • Jaringan Fiber Optik</p>
-        </form>
-        {youtubeEmbed}
+          <form onSubmit={login} className="mt-6 space-y-3">
+            <input value={user.username} onChange={e=>setUser({...user,username:e.target.value})} placeholder="Username : admin" className="w-full border rounded-xl px-4 py-3"/>
+            <input type="password" value={user.password} onChange={e=>setUser({...user,password:e.target.value})} placeholder="Password : admin" className="w-full border rounded-xl px-4 py-3"/>
+            <button className="w-full bg-amber-400 font-bold py-3 rounded-xl">MASUK 🚀</button>
+          </form>
+          <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-xs">
+            <b>Demo Login:</b><br/>Admin : admin / admin<br/>Kasir : kasir / kasir
+          </div>
+          <div className="mt-4 text-center">
+            <button onClick={()=>setLaguNyala(!laguNyala)} className="text-sm bg-red-100 px-4 py-2 rounded-full font-bold">▶️ {laguNyala?"Matikan Lagu":"Putar Lagu Kroncong Protol"}</button>
+            {laguNyala && <div className="mt-3"><iframe width="100%" height="160" src="https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1" allow="autoplay" frameborder="0"></iframe><p className="text-[11px] text-gray-400 mt-1">Kroncong Protol - Bondan Prakoso</p></div>}
+          </div>
+        </div>
       </div>
     );
   }
 
-  const onlineCount = clients.filter(c => c.status === 'Online').length;
-  const isolirCount = clients.filter(c => c.status === 'Isolir').length;
-  const totalClients = clients.length || 1;
-  const onlinePercent = (onlineCount / totalClients) * 100;
-
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc', fontFamily: 'Segoe UI, sans-serif', color: '#0f172a' }}>
-      <style>{`@keyframes flyBee { 0% { transform: translate(0px, 0px) rotate(0deg); } 25% { transform: translate(15px, -12px) rotate(8deg); } 50% { transform: translate(30px, 0px) rotate(0deg); } 75% { transform: translate(15px, 12px) rotate(-8deg); } 100% { transform: translate(0px, 0px) rotate(0deg); } } .animated-bee { display: inline-block; animation: flyBee 3s ease-in-out infinite; }`}</style>
-      <aside style={{ width: '290px', backgroundColor: '#0f172a', display: 'flex', flexDirection: 'column', color: '#f8fafc' }}>
-        <div style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '14px', borderBottom: '1px solid #1e293b' }}>
-          <div style={{ backgroundColor: '#f59e0b', width: '42px', height: '42px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}><span className="animated-bee">🐝</span></div>
-          <div><h2 style={{ fontSize: '18px', fontWeight: '900', color: '#ffffff', margin: 0 }}>Hachi Net ⚡</h2><span style={{ fontSize: '11px', color: '#fbbf24', fontWeight: '700' }}>KOLONI WARNASARI</span></div>
+    <div className={"min-h-screen "+(dark?"bg-gray-900 text-white":"bg-gray-100")}>
+      <div className="bg-amber-400 p-4 flex justify-between items-center sticky top-0 z-10">
+        <div className="flex items-center gap-2"><span className="text-3xl">🐝</span><div><b className="text-lg leading-none">HACHI NET</b><p className="text-[11px]">Warnasari • {user.username}</p></div></div>
+        <div className="flex gap-2">
+          <button onClick={()=>setDark(!dark)} className="bg-black text-white text-xs px-3 py-2 rounded-full">{dark?"☀️":"🌙"}</button>
+          <button onClick={()=>setIsLoggedIn(false)} className="bg-white text-xs font-bold px-3 py-2 rounded-full">Keluar</button>
         </div>
-        <nav style={{ flex: 1, padding: '18px 14px', overflowY: 'auto' }}>
-          {[
-            { id: 'dashboard', label: 'Dashboard Utama', icon: '📊' },
-            { id: 'registrasi', label: 'Registrasi & Aktivasi', icon: '📝' },
-            { id: 'pelanggan', label: 'Data Pelanggan', icon: '👥' },
-            { id: 'wa-gateway', label: 'WhatsApp Gateway', icon: '💬', badge: 'Online' },
-            { id: 'distribusi', label: 'Distribusi ODC & ODP', icon: '🌐' },
-            { id: 'olt', label: 'Management OLT', icon: '⚙️' },
-            { id: 'tiket', label: 'Tiket & Pemasangan', icon: '🎫', badge: tiketList.length },
-            { id: 'network-monitoring', label: 'Network Monitoring', icon: '🖥️' },
-            { id: 'field-tech', label: 'Panel Teknisi Lapangan', icon: '🛠️' },
-            { id: 'activity-log', label: 'Log Aktivitas (Audit Trail)', icon: '📋', badge: activityLogs.length },
-            ...(currentUser?.role === 'developer' ? [{ id: 'developer', label: 'Manajemen Akun', icon: '🔑' }] : [])
-          ].map((menu) => (
-            <button key={menu.id} onClick={() => setActiveTab(menu.id)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', marginBottom: '8px', borderRadius: '12px', border: 'none', backgroundColor: activeTab === menu.id ? '#f59e0b' : 'transparent', color: activeTab === menu.id ? '#0f172a' : '#94a3b8', cursor: 'pointer', fontSize: '13px', fontWeight: activeTab === menu.id ? '900' : '600', textAlign: 'left' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><span style={{ fontSize: '17px' }}>{menu.icon}</span><span>{menu.label}</span></div>
-              {menu.badge && (<span style={{ fontSize: '10px', backgroundColor: menu.badge === 'Online' ? 'rgba(52,211,153,0.2)' : '#3b82f6', color: menu.badge === 'Online' ? '#34d399' : '#fff', padding: '2px 6px', borderRadius: '6px', fontWeight: 'bold' }}>{menu.badge}</span>)}
-            </button>
+      </div>
+
+      <div className="p-4 max-w-6xl mx-auto">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          {["dashboard","pelanggan","tambah","odp","tiket"].map(t=>(
+            <button key={t} onClick={()=>setTab(t)} className={"px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap "+(tab===t?"bg-black text-white":"bg-white text-black")}>{t==="dashboard"?"📊 Dashboard":t==="pelanggan"?"👥 Pelanggan":t==="tambah"?"➕ Tambah":t==="odp"?"📡 ODP / OLT":"🎫 Tiket"}</button>
           ))}
-        </nav>
-        <div style={{ padding: '16px 20px', borderTop: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#090d16' }}>
-          <div><p style={{ margin: 0, fontWeight: 'bold', color: '#f8fafc', fontSize: '13px' }}>{currentUser?.username}</p><span style={{ color: '#fbbf24', textTransform: 'uppercase', fontSize: '10px', fontWeight: '800' }}>{currentUser?.role}</span></div>
-          <button onClick={() => { stopYoutube(); setIsLoggedIn(false); }} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '7px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>Logout</button>
         </div>
-      </aside>
-      <main style={{ flex: 1, padding: '36px', overflowY: 'auto', position: 'relative' }}>
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', borderBottom: '1px solid #e2e8f0', paddingBottom: '20px' }}>
-          <div><h1 style={{ fontSize: '26px', fontWeight: '900', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>Halo, {currentUser?.username}! <span className="animated-bee">🐝</span></h1><p style={{ color: '#64748b', marginTop: '4px', fontSize: '13px' }}>Sistem Koloni Monitoring & Otorisasi OLT Real-Time Hachi Net Warnasari.</p></div>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <input type="text" placeholder="Cari pelanggan / SN / ID..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', padding: '10px 16px', borderRadius: '10px', color: '#0f172a', fontSize: '12.5px', width: '220px', outline: 'none' }} />
-            <div style={{ backgroundColor: '#ecfdf5', border: '1px solid #10b981', padding: '10px 18px', borderRadius: '12px', fontSize: '12px', color: '#047857', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ width: '9px', height: '9px', backgroundColor: '#10b981', borderRadius: '50%', display: 'inline-block' }}></span>MikroTik API Connected</div>
-          </div>
-        </header>
 
-        {activeTab === 'dashboard' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-            <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div><span style={{ backgroundColor: '#fef3c7', color: '#b45309', padding: '5px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '900' }}>🐝 Hachi Net Koloni Dashboard</span><h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0f172a', margin: '14px 0 8px' }}>Standar ISP Profesional Aktif! 🚀</h2><p style={{ color: '#64748b', fontSize: '14px', margin: 0, maxWidth: '580px', lineHeight: '1.6' }}>Total {clients.length} pelanggan terdaftar. Dilengkapi Audit Trail, Invoice e-Invoice PDF, dan Sinkronisasi Bandwidth Otomatis.</p><div style={{ display: 'flex', gap: '14px', marginTop: '24px' }}><button onClick={() => setActiveTab('registrasi')} style={{ backgroundColor: '#f59e0b', color: '#0f172a', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: '900', cursor: 'pointer', fontSize: '14px' }}>+ Registrasi Pelanggan Baru</button><button onClick={() => setActiveTab('pelanggan')} style={{ backgroundColor: '#ffffff', color: '#0f172a', border: '1px solid #cbd5e1', padding: '12px 24px', borderRadius: '12px', fontWeight: '800', cursor: 'pointer', fontSize: '14px' }}>Lihat Data Pelanggan</button></div></div>
-              <div style={{ textAlign: 'right' }}><div style={{ fontSize: '42px', fontWeight: '900', color: '#0f172a' }}>{clients.length}</div><div style={{ fontSize: '13px', color: '#64748b', fontWeight: '700' }}>KLIEN AKTIF</div></div>
+        {tab==="dashboard" && (
+          <div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+              <div className="bg-white text-black rounded-2xl p-4"><p className="text-xs text-gray-500">Total Pelanggan</p><b className="text-2xl">{clients.length} Orang</b></div>
+              <div className="bg-white text-black rounded-2xl p-4"><p className="text-xs text-gray-500">Aktif</p><b className="text-2xl text-green-600">{clients.filter(c=>c.status==="Aktif").length}</b></div>
+              <div className="bg-white text-black rounded-2xl p-4"><p className="text-xs text-gray-500">Belum Lunas</p><b className="text-2xl text-red-500">{clients.filter(c=>c.bayar==="Belum Lunas").length}</b></div>
+              <div className="bg-white text-black rounded-2xl p-4"><p className="text-xs text-gray-500">Pendapatan / Bln</p><b className="text-xl">Rp {clients.reduce((a,b)=>a+b.harga,0).toLocaleString("id-ID")}</b></div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
-              <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '24px' }}><span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>PELANGGAN ONLINE</span><div style={{ fontSize: '28px', fontWeight: '900', color: '#10b981', marginTop: '8px' }}>{onlineCount} <span style={{ fontSize: '14px', color: '#64748b', fontWeight: 'normal' }}>({onlinePercent.toFixed(0)}%)</span></div></div>
-              <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '24px' }}><span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>STATUS ISOLIR</span><div style={{ fontSize: '28px', fontWeight: '900', color: '#ef4444', marginTop: '8px' }}>{isolirCount}</div></div>
-              <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '24px' }}><span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>TIKET GANGGUAN</span><div style={{ fontSize: '28px', fontWeight: '900', color: '#f59e0b', marginTop: '8px' }}>{tiketList.filter(t => t.status !== 'Selesai').length}</div></div>
-              <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '24px' }}><span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>ODP TERPASANG</span><div style={{ fontSize: '28px', fontWeight: '900', color: '#3b82f6', marginTop: '8px' }}>{odpList.length} Unit</div></div>
+            <div className="bg-white text-black rounded-2xl p-4 mt-3">
+              <b>🎵 Lagu & STB VPS</b>
+              <p className="text-sm text-gray-600 mt-1">STB HG680P / B860H siap dijadikan VPS. File ini sudah siap dihubungkan ke STB nanti, tinggal ganti API ke IP STB.</p>
+              <button onClick={()=>setLaguNyala(!laguNyala)} className="mt-3 bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold">{laguNyala?"⏸️ Matikan":"▶️ Putar Kroncong Protol"}</button>
+              {laguNyala && <iframe className="mt-3 w-full rounded-xl" height="180" src="https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1" allow="autoplay" frameborder="0"></iframe>}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
-              <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '28px' }}><h3 style={{ fontSize: '16px', fontWeight: '900', color: '#0f172a', marginBottom: '16px' }}>Status Perangkat Jaringan Inti</h3><div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>{networkNodes.map((node, i) => (<div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', backgroundColor: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0' }}><div><strong style={{ fontSize: '14px', color: '#0f172a' }}>{node.name}</strong><p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748b' }}>IP: {node.ip} • Ping: {node.ping}</p></div><span style={{ padding: '6px 12px', backgroundColor: '#dcfce7', color: '#166534', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold' }}>{node.status}</span></div>))}</div></div>
-              <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '28px' }}><h3 style={{ fontSize: '16px', fontWeight: '900', color: '#0f172a', marginBottom: '16px' }}>Log Aktivitas Terbaru</h3><div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>{activityLogs.slice(0, 4).map(log => (<div key={log.id} style={{ fontSize: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}><span style={{ fontWeight: 'bold', color: '#f59e0b' }}>[{log.user}]</span> <span style={{ color: '#334155' }}>{log.action}</span><div style={{ fontSize: '10px', color: '#94a3b8' }}>{log.time}</div></div>))}</div></div>
+            <div className="bg-white text-black rounded-2xl p-4 mt-3">
+              <b>📡 OLT & MikroTik</b>
+              <p className="text-sm mt-2">OLT: VSOL OLT Utama Warnasari - 192.168.1.100 - <span className="text-green-600 font-bold">Online</span></p>
+              <p className="text-sm">MikroTik RB4011 - 192.168.1.1 - <span className="text-green-600 font-bold">Online</span></p>
+              <p className="text-sm">STB VPS: Siap dihubungkan (IP STB nanti)</p>
             </div>
           </div>
         )}
 
-        {activeTab === 'registrasi' && (
-          <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '36px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}><div><h2 style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', margin: 0 }}>Registrasi Pelanggan & OLT Auto-Sync</h2><p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Scan ONU pada OLT, pilih SN Modem, dan sinkronkan otomatis ke PPPoE & Simple Queue MikroTik.</p></div><button onClick={handleScanOlt} disabled={isScanningOlt} style={{ backgroundColor: '#3b82f6', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>{isScanningOlt ? 'Memindai ONU...' : '🔍 Scan ONU Tanpa Pemilik'}</button></div>
-            {detectedModems.length > 0 && (<div style={{ marginBottom: '28px', backgroundColor: '#fef3c7', border: '1px solid #f59e0b', padding: '18px', borderRadius: '16px' }}><h4 style={{ margin: '0 0 10px 0', fontSize: '14px', fontWeight: '900', color: '#92400e' }}>Perangkat ONU Terdeteksi (Unconfigured):</h4><div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>{detectedModems.map((m, idx) => (<div key={idx} style={{ backgroundColor: '#ffffff', padding: '12px 16px', borderRadius: '12px', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: '14px' }}><div><strong style={{ fontSize: '13px', color: '#0f172a' }}>{m.sn}</strong><div style={{ fontSize: '11px', color: '#64748b' }}>{m.vendor} • RX: {m.rx} • {m.port}</div></div><button onClick={() => handlePilihModemScan(m)} style={{ backgroundColor: '#f59e0b', color: '#0f172a', border: 'none', padding: '6px 12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '11px' }}>Gunakan SN</button></div>))}</div></div>)}
-            <form onSubmit={handleSimpanRegistrasi} style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
-              <div><label style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>NAMA LENGKAP PELANGGAN</label><input type="text" value={formRegistrasi.name} onChange={e => setFormRegistrasi({...formRegistrasi, name: e.target.value})} placeholder="Contoh: Budi Santoso" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }} required /></div>
-              <div><label style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>NOMOR KTP / IDENTITAS</label><input type="text" value={formRegistrasi.noIdentitas} onChange={e => setFormRegistrasi({...formRegistrasi, noIdentitas: e.target.value})} placeholder="3201123456780002" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }} required /></div>
-              <div><label style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>PAKET INTERNET</label><select value={formRegistrasi.paket} onChange={e => setFormRegistrasi({...formRegistrasi, paket: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', boxSizing: 'border-box', backgroundColor: '#fff' }}><option value="10 Mbps (Rp 75.000)">10 Mbps (Rp 75.000)</option><option value="20 Mbps (Rp 100.000)">20 Mbps (Rp 100.000)</option><option value="30 Mbps (Rp 125.000)">30 Mbps (Rp 125.000)</option></select></div>
-              <div><label style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>SN MODEM ONU / ONT</label><input type="text" value={formRegistrasi.snModem} onChange={e => setFormRegistrasi({...formRegistrasi, snModem: e.target.value})} placeholder="VSOL99887766 atau HWTC..." style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }} required /></div>
-              <div><label style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>NOMOR TELEPON (WHATSAPP)</label><input type="text" value={formRegistrasi.telepon} onChange={e => setFormRegistrasi({...formRegistrasi, telepon: e.target.value})} placeholder="628123456789" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }} required /></div>
-              <div><label style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>TITIK KORORDINAT (TIKOR)</label><input type="text" value={formRegistrasi.tikor} onChange={e => setFormRegistrasi({...formRegistrasi, tikor: e.target.value})} placeholder="-6.524500, 106.801500" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }} /></div>
-              <div style={{ gridColumn: 'span 2' }}><label style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>ALAMAT LENGKAP</label><input type="text" value={formRegistrasi.alamat} onChange={e => setFormRegistrasi({...formRegistrasi, alamat: e.target.value})} placeholder="Jl. Raya Warnasari No. 45..." style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }} required /></div>
-              <div style={{ gridColumn: 'span 2', marginTop: '10px' }}><button type="submit" style={{ backgroundColor: '#f59e0b', color: '#0f172a', border: 'none', padding: '16px', width: '100%', borderRadius: '12px', fontWeight: '900', cursor: 'pointer', fontSize: '15px' }}>Simpan & Sinkronkan ke MikroTik API 🚀</button></div>
-            </form>
-          </div>
-        )}
-
-        {activeTab === 'pelanggan' && (
-          <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '36px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}><h2 style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', margin: 0 }}>Daftar Pelanggan Koloni Hachi Net</h2><span style={{ fontSize: '13px', color: '#64748b' }}>Total: {clients.length} Pelanggan</span></div>
-            <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}><thead><tr style={{ borderBottom: '2px solid #e2e8f0', color: '#64748b' }}><th style={{ padding: '12px' }}>ID & Nama</th><th style={{ padding: '12px' }}>Paket</th><th style={{ padding: '12px' }}>PPPoE Credential</th><th style={{ padding: '12px' }}>ODP / SN Modem</th><th style={{ padding: '12px' }}>Status Redaman</th><th style={{ padding: '12px' }}>Status Bayar</th><th style={{ padding: '12px' }}>Aksi</th></tr></thead><tbody>{clients.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.id.toLowerCase().includes(searchQuery.toLowerCase()) || c.snModem.toLowerCase().includes(searchQuery.toLowerCase())).map(c => (<tr key={c.docId} style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '14px' }}><strong style={{ color: '#0f172a', display: 'block' }}>{c.name}</strong><span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 'bold' }}>{c.id}</span></td><td style={{ padding: '14px' }}>{c.paket}</td><td style={{ padding: '14px' }}><code style={{ backgroundColor: '#f1f5f9', padding: '3px 6px', borderRadius: '6px', fontSize: '11px' }}>{c.pppoeUser} / {c.pppoePass}</code></td><td style={{ padding: '14px' }}><div style={{ fontSize: '12px', fontWeight: 'bold' }}>{c.odp}</div><span style={{ fontSize: '11px', color: '#64748b' }}>{c.snModem}</span></td><td style={{ padding: '14px' }}><span style={{ color: '#10b981', fontWeight: 'bold', display: 'block' }}>{c.rxPower}</span><span style={{ fontSize: '10px', color: '#64748b' }}>Temp: {c.temp}</span></td><td style={{ padding: '14px' }}><span style={{ padding: '4px 10px', backgroundColor: c.statusBayar === 'Lunas' ? '#dcfce7' : '#fee2e2', color: c.statusBayar === 'Lunas' ? '#166534' : '#991b1b', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold' }}>{c.statusBayar}</span></td><td style={{ padding: '14px' }}><div style={{ display: 'flex', gap: '6px' }}><button onClick={() => bukaMaps(c.tikor)} style={{ backgroundColor: '#3b82f6', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>Maps</button>{c.fotoRumah && (<button onClick={() => window.open(c.fotoRumah, '_blank')} style={{ backgroundColor: '#8b5cf6', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>Foto</button>)}</div></td></tr>))}</tbody></table></div>
-          </div>
-        )}
-
-        {activeTab === 'wa-gateway' && (
-          <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '36px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}><div><h2 style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', margin: 0 }}>WhatsApp Billing Gateway (Otomatis)</h2><p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Kirim pengingat tagihan server listrik (tanggal 10) & bandwidth MyRepublic (tanggal 15) otomatis.</p></div><span style={{ backgroundColor: '#dcfce7', color: '#166534', padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold' }}>Session Connected: +62 812-3456-7890</span></div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-              <div style={{ backgroundColor: '#f8fafc', padding: '24px', borderRadius: '18px', border: '1px solid #e2e8f0' }}><h3 style={{ fontSize: '15px', fontWeight: '900', color: '#0f172a', marginBottom: '14px' }}>Kirim Tagihan Broadcast Manual</h3><div style={{ marginBottom: '14px' }}><label style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>TEMPLATE PESAN</label><textarea rows={5} defaultValue={`Halo [Nama Pelanggan],\n\nTagihan internet Hachi Net Anda untuk paket [Paket] sebesar [Harga] telah terbit.\nSilakan lakukan pembayaran sebelum tanggal 20 agar koneksi tetap lancar.\n\nTerima kasih! 🐝`} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13px', boxSizing: 'border-box' }} /></div><button onClick={() => { alert('Broadcast WhatsApp terkirim ke seluruh pelanggan!'); addLog(currentUser?.username, 'Mengirim broadcast WhatsApp tagihan.'); }} style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', width: '100%' }}>Kirim Broadcast ke Semua Pelanggan 💬</button></div>
-              <div style={{ backgroundColor: '#f8fafc', padding: '24px', borderRadius: '18px', border: '1px solid #e2e8f0' }}><h3 style={{ fontSize: '15px', fontWeight: '900', color: '#0f172a', marginBottom: '14px' }}>Penerima Reminder Terdaftar</h3><div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>{['Akmal', 'Zaenal', 'Aldi', 'Nurafiansyah'].map((nama, idx) => (<div key={idx} style={{ backgroundColor: '#ffffff', padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ fontWeight: 'bold', fontSize: '13px' }}>{nama}</span><span style={{ fontSize: '11px', color: '#10b981', fontWeight: 'bold' }}>Active WhatsApp</span></div>))}</div></div>
+        {tab==="pelanggan" && (
+          <div className="mt-4">
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Cari nama / SN modem..." className="w-full bg-white text-black rounded-xl px-4 py-3 mb-3"/>
+            <div className="space-y-3">
+              {filtered.map(c=>(
+                <div key={c.id} className="bg-white text-black rounded-2xl p-4">
+                  <div className="flex justify-between"><b>{c.nama}</b><span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">{c.status}</span></div>
+                  <p className="text-sm text-gray-500">{c.paket} • Rp {c.harga.toLocaleString("id-ID")} • {c.bayar}</p>
+                  <p className="text-xs mt-2">SN: {c.sn} | IP: {c.ip} | RX: {c.rx} | ODP: {c.odp}</p>
+                  <p className="text-xs">📍 {c.alamat} • 📞 {c.hp}</p>
+                  <a href={"https://wa.me/"+c.hp} target="_blank" className="inline-block mt-2 bg-green-500 text-white text-xs px-3 py-1 rounded-full font-bold">Chat WA</a>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
-        {activeTab === 'distribusi' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-            <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '28px' }}><h3 style={{ fontSize: '16px', fontWeight: '900', color: '#0f172a', marginBottom: '20px' }}>Management ODC</h3>{odcList.map(o => (<div key={o.id} style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '14px', border: '1px solid #e2e8f0', marginBottom: '12px' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><strong style={{ fontSize: '14px', color: '#0f172a' }}>{o.nama}</strong><button onClick={() => toggleOdcStatus(o.id)} style={{ backgroundColor: o.status === 'Aktif' ? '#dcfce7' : '#fee2e2', color: o.status === 'Aktif' ? '#166534' : '#991b1b', border: 'none', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>{o.status}</button></div><p style={{ margin: '6px 0 0', fontSize: '12px', color: '#64748b' }}>{o.patokan} • Kapasitas: {o.terpakai} / {o.kapasitas}</p></div>))}</div>
-            <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '28px' }}><h3 style={{ fontSize: '16px', fontWeight: '900', color: '#0f172a', marginBottom: '20px' }}>Management ODP</h3><form onSubmit={handleTambahOdp} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}><input type="text" placeholder="Nama ODP (mis: ODP-WRN-02)" value={formOdp.nama} onChange={e => setFormOdp({...formOdp, nama: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px' }} required /><input type="text" placeholder="Patokan Tiang / Lokasi" value={formOdp.patokan} onChange={e => setFormOdp({...formOdp, patokan: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px' }} required /><button type="submit" style={{ backgroundColor: '#f59e0b', color: '#0f172a', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>+ Tambah ODP</button></form><div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '200px', overflowY: 'auto' }}>{odpList.map(o => (<div key={o.id} style={{ backgroundColor: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><div><strong style={{ fontSize: '13px', color: '#0f172a' }}>{o.nama}</strong><div style={{ fontSize: '11px', color: '#64748b' }}>{o.patokan} • Port: {o.portTerpakai}/{o.portTotal}</div></div><button onClick={() => toggleOdpStatus(o.id)} style={{ backgroundColor: o.status === 'Aktif' ? '#dcfce7' : '#fee2e2', color: o.status === 'Aktif' ? '#166534' : '#991b1b', border: 'none', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>{o.status}</button></div>))}</div></div>
+        {tab==="tambah" && (
+          <form onSubmit={tambahPelanggan} className="bg-white text-black rounded-2xl p-4 mt-4 space-y-3">
+            <b>➕ Registrasi Pelanggan Baru + STB / ONT</b>
+            <input value={newClient.nama} onChange={e=>setNewClient({...newClient,nama:e.target.value})} placeholder="Nama Pelanggan" className="w-full border rounded-xl px-4 py-3"/>
+            <input value={newClient.hp} onChange={e=>setNewClient({...newClient,hp:e.target.value})} placeholder="No WA, contoh 62812..." className="w-full border rounded-xl px-4 py-3"/>
+            <input value={newClient.alamat} onChange={e=>setNewClient({...newClient,alamat:e.target.value})} placeholder="Alamat" className="w-full border rounded-xl px-4 py-3"/>
+            <input value={newClient.sn} onChange={e=>setNewClient({...newClient,sn:e.target.value})} placeholder="SN Modem / STB (bisa di-scan nanti)" className="w-full border rounded-xl px-4 py-3"/>
+            <select value={newClient.paket} onChange={e=>setNewClient({...newClient,paket:e.target.value})} className="w-full border rounded-xl px-4 py-3">
+              <option>20 Mbps - Rp 100.000</option><option>30 Mbps - Rp 125.000</option><option>50 Mbps - Rp 180.000</option>
+            </select>
+            <button className="w-full bg-amber-400 font-bold py-3 rounded-xl">Simpan & Daftarkan ke STB / OLT</button>
+          </form>
+        )}
+
+        {tab==="odp" && (
+          <div className="bg-white text-black rounded-2xl p-4 mt-4">
+            <b>📡 Daftar ODP - Warnasari</b>
+            <p className="text-sm mt-2">ODP-WRN-01 - 8 Port - Terisi 5 - 62% - Tikor: -6.52, 106.80</p>
+            <p className="text-sm">ODP-WRN-02 - 8 Port - Terisi 3 - 37% - Tikor: -6.52, 106.81</p>
+            <p className="text-sm">OLT Utama Warnasari - VSOL - 192.168.1.100</p>
           </div>
         )}
 
-        {activeTab === 'olt' && (
-          <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '36px' }}><h2 style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', marginBottom: '20px' }}>Management Perangkat OLT (VSOL / Hioso / Huawei)</h2><div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>{oltList.map(o => (<div key={o.id} style={{ backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', padding: '24px', borderRadius: '18px' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}><h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#0f172a' }}>{o.nama}</h3><span style={{ backgroundColor: '#dcfce7', color: '#166534', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold' }}>{o.status}</span></div><p style={{ margin: '4px 0', fontSize: '13px', color: '#64748b' }}>IP Address: {o.ip}</p><p style={{ margin: '4px 0', fontSize: '13px', color: '#64748b' }}>Brand & Model: {o.brand}</p><p style={{ margin: '4px 0', fontSize: '13px', color: '#64748b' }}>PON Ports: {o.ponPorts} Ports</p></div>))}</div></div>
+        {tab==="tiket" && (
+          <div className="bg-white text-black rounded-2xl p-4 mt-4">
+            <b>🎫 Tiket Gangguan</b>
+            <p className="text-sm mt-2">TCK-001 - Dole - Gangguan Jaringan - <span className="text-red-500 font-bold">Darurat</span> - Teknisi: Teknisi 1</p>
+            <p className="text-sm mt-1">TCK-002 - Sulaeman - LOS / Merah - <span className="text-yellow-600 font-bold">Proses</span></p>
+            <p className="text-xs text-gray-400 mt-3">Nanti tiket ini nyambung ke teknisi via WA otomatis.</p>
+          </div>
         )}
-
-        {activeTab === 'tiket' && (
-          <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '36px' }}><h2 style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', marginBottom: '20px' }}>Tiket Gangguan & Pemasangan Baru</h2><form onSubmit={handleTambahTiket} style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}><input type="text" placeholder="Nama Pelanggan" value={formTiket.pelanggan} onChange={e => setFormTiket({...formTiket, pelanggan: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px' }} required /><select value={formTiket.kategori} onChange={e => setFormTiket({...formTiket, kategori: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', backgroundColor: '#fff' }}><option value="Gangguan Jaringan">Gangguan Jaringan</option><option value="Pemasangan Baru">Pemasangan Baru</option><option value="Redaman Tinggi">Redaman Tinggi</option></select><select value={formTiket.teknisi} onChange={e => setFormTiket({...formTiket, teknisi: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', backgroundColor: '#fff' }}><option value="Teknisi 1">Teknisi 1</option><option value="Teknisi 2">Teknisi 2</option></select><button type="submit" style={{ backgroundColor: '#f59e0b', color: '#0f172a', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>Buat Tiket</button></form><div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>{tiketList.map(t => (<div key={t.id} style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '14px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><div><div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}><strong style={{ fontSize: '14px', color: '#0f172a' }}>{t.id} - {t.pelanggan}</strong><span style={{ fontSize: '11px', backgroundColor: '#e2e8f0', padding: '2px 8px', borderRadius: '6px' }}>{t.kategori}</span></div><p style={{ margin: '4px 0 0', fontSize: '12px', color: '#64748b' }}>Jenis: {t.jenis} • Ditugaskan ke: {t.teknisi} • Tanggal: {t.tanggal}</p></div><div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}><span style={{ padding: '4px 10px', backgroundColor: t.status === 'Selesai' ? '#dcfce7' : '#fef3c7', color: t.status === 'Selesai' ? '#166534' : '#b45309', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold' }}>{t.status}</span>{t.status !== 'Selesai' && (<button onClick={() => handleSelesaikanTiket(t.id)} style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>Selesaikan</button>)}</div></div>))}</div></div>
-        )}
-
-        {activeTab === 'network-monitoring' && (
-          <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '36px' }}><h2 style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', marginBottom: '20px' }}>Network Monitoring & Upstream MyRepublic</h2><div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}><div style={{ backgroundColor: '#f8fafc', padding: '24px', borderRadius: '18px', border: '1px solid #e2e8f0' }}><h3 style={{ margin: '0 0 10px', fontSize: '15px', fontWeight: '900' }}>Upstream Bandwidth MyRepublic</h3><p style={{ fontSize: '13px', color: '#64748b' }}>Status: Connected (Dedicated 1Gbps)</p><div style={{ fontSize: '24px', fontWeight: '900', color: '#10b981', marginTop: '10px' }}>312.4 Mbps / 185.1 Mbps <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'normal' }}>(Rx/Tx)</span></div></div><div style={{ backgroundColor: '#f8fafc', padding: '24px', borderRadius: '18px', border: '1px solid #e2e8f0' }}><h3 style={{ margin: '0 0 10px', fontSize: '15px', fontWeight: '900' }}>MikroTik L2TP/IPsec Tunnel</h3><p style={{ fontSize: '13px', color: '#64748b' }}>Status: Active & Synced</p><div style={{ fontSize: '24px', fontWeight: '900', color: '#3b82f6', marginTop: '10px' }}>Ping: 2ms • Loss: 0%</div></div></div></div>
-        )}
-
-        {activeTab === 'field-tech' && (
-          <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '36px' }}><h2 style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', marginBottom: '20px' }}>Panel Teknisi Lapangan (ODP & OLT Checker)</h2><p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px' }}>Gunakan panel ini saat pengecekan redaman di tiang ODP atau instalasi rumah pelanggan.</p><div style={{ display: 'flex', gap: '14px' }}><button onClick={() => alert('GPS & Tikor berhasil dikirim ke server pusat!')} style={{ backgroundColor: '#3b82f6', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>📍 Kirim Posisi GPS Saat Ini</button><button onClick={() => alert('Pengecekan redaman ONU port selesai. Hasil stabil.')} style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>⚡ Test Redaman Port ONU</button></div></div>
-        )}
-
-        {activeTab === 'activity-log' && (
-          <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '36px' }}><h2 style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', marginBottom: '20px' }}>Log Aktivitas Sistem (Audit Trail)</h2><div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>{activityLogs.map(log => (<div key={log.id} style={{ backgroundColor: '#f8fafc', padding: '14px 18px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><div><span style={{ fontWeight: 'bold', color: '#f59e0b', marginRight: '10px' }}>[{log.user}]</span><span style={{ fontSize: '13px', color: '#0f172a' }}>{log.action}</span></div><span style={{ fontSize: '11px', color: '#94a3b8' }}>{log.time}</span></div>))}</div></div>
-        )}
-
-        {activeTab === 'developer' && currentUser?.role === 'developer' && (
-          <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '36px' }}><h2 style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', marginBottom: '20px' }}>Manajemen Akun & Hak Akses Staff</h2><form onSubmit={handleTambahUserDeveloper} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '24px' }}><input type="text" placeholder="Username" value={formNewUser.username} onChange={e => setFormNewUser({...formNewUser, username: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px' }} required /><select value={formNewUser.role} onChange={e => setFormNewUser({...formNewUser, role: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', backgroundColor: '#fff' }}><option value="developer">Developer</option><option value="billing">Billing / Kasir</option><option value="teknisi">Teknisi</option></select><input type="password" placeholder="Password" value={formNewUser.pass} onChange={e => setFormNewUser({...formNewUser, pass: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px' }} required /><button type="submit" style={{ gridColumn: 'span 3', backgroundColor: '#f59e0b', color: '#0f172a', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>Tambah Akun Staff Baru</button></form><div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>{usersList.map(u => (<div key={u.id} style={{ backgroundColor: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><div><strong style={{ fontSize: '13px', color: '#0f172a' }}>{u.username}</strong><span style={{ fontSize: '11px', color: '#64748b', marginLeft: '10px' }}>Role: {u.role}</span></div><code>Pass: {u.pass}</code></div>))}</div></div>
-        )}
-      </main>
-      {youtubeEmbed}
-      <button onClick={nyalaMatiLagu} style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 50, background: '#f59e0b', color: '#0f172a', border: 'none', padding: '12px 18px', borderRadius: '999px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 8px 20px rgba(0,0,0,0.2)' }}>{laguNyala ? '⏸️ Matiin Lagu' : '▶️ Nyalain Lagu'}</button>
-      <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ position: 'fixed', bottom: '20px', right: '190px', zIndex: 50, background: '#0f172a', color: '#fff', border: 'none', padding: '12px 16px', borderRadius: '999px', fontWeight: 'bold', cursor: 'pointer' }}>{isDarkMode ? '☀️ Siang' : '🌙 Malam'}</button>
+      </div>
     </div>
   );
 }
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
